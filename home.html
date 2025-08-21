@@ -12,10 +12,10 @@
       --bg: #ffffff;
       --text: #121212;
       --muted: #6b7280;
-      --accent: #b08d57; /* soft gold accent */
-      --accent-ink: #0f2e6e; /* brand blue for text hovers */
+      --accent: #b08d57; 
+      --accent-ink: #0f2e6e; 
       --border: #e7e7e7;
-      --ink-2: #0f2e6e; /* brand blue for buttons/ink */
+      --ink-2: #0f2e6e; 
       --max-w: 1200px;
       --pad: clamp(14px, 2vw, 24px);
       --radius: 12px;
@@ -34,20 +34,20 @@
 
     /* Header */
     .header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.97); backdrop-filter: saturate(1.1) blur(6px); border-bottom: 1px solid var(--border); }
-    .header__row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; padding: 14px 0; }
+    .header__row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; padding: 10px 0; }
     .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-    .brand a { display: inline-block; padding: 6px 0; font-size: clamp(18px, 2.2vw, 26px); }
+    .brand a { display: inline-block; padding: 4px 0; font-size: clamp(16px, 2vw, 22px); }
 
     /* Nav */
     .nav { display: flex; justify-content: center; }
-    .nav { position: relative; overflow-x: auto; scrollbar-width: none; }
+    .nav { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; }
     .nav::-webkit-scrollbar { display: none; }
-    .nav__list { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 16px 20px; list-style: none; margin: 0; padding: 0; }
-    .nav__link { display: inline-block; padding: 8px 4px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; position: relative; }
+    .nav.grabbing { cursor: grabbing; }
+    .nav__list { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 10px 12px; list-style: none; margin: 0; padding: 0; }
+    .nav__link { display: inline-block; padding: 6px 2px; font-size: 13px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase; position: relative; }
     .nav__link::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .25s ease; opacity: .8; }
     .nav__link:hover::after, .nav__link:focus::after { transform: scaleX(1); }
 
-    .header__actions { display: flex; align-items: center; gap: 10px; }
     .icon-btn { background: none; border: 1px solid var(--border); padding: 8px 12px; border-radius: 999px; font-size: 13px; }
 
     /* Mobile drawer base (hidden by default) */
@@ -160,7 +160,7 @@
   <header class="header" role="banner">
     <div class="container header__row">
       <button class="hamburger" id="hamburger" aria-label="Open menu" aria-controls="mobile-drawer" aria-expanded="false">Menu</button>
-      <div class="brand"><a href="/">Culet Diamonds</a></div>
+      <div class="brand"><a href="/home.html">Culet Diamonds</a></div>
       <nav class="nav" aria-label="Main">
         <ul class="nav__list">
           <li><a class="nav__link inkable" href="/engagement-rings.html">Engagement Rings</a></li>
@@ -172,14 +172,11 @@
           <li><a class="nav__link inkable" href="/estate-jewelry.html">Estate Jewelry</a></li>
           <li><a class="nav__link inkable" href="/jewelry-program.html">Jewelry Program</a></li>
           <li><a class="nav__link inkable" href="/diamond-education.html">Diamond Education</a></li>
-          <li><a class="nav__link inkable" href="/about.html">About Us</a></li>
+          <li><a class="nav__link inkable" href="/aboutus.html">About Us</a></li>
           <li><a class="nav__link inkable" href="/contact.html">Contact Us</a></li>
         </ul>
         <span class="nav__indicator" aria-hidden="true"></span>
       </nav>
-      <div class="header__actions">
-        <button class="icon-btn inkable" aria-label="Search">Search</button>
-      </div>
     </div>
   </header>
 
@@ -187,7 +184,7 @@
   <div class="scrim" id="scrim" hidden></div>
   <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true" aria-label="Mobile navigation">
     <header>
-      <div class="brand"><a href="/">Culet Diamonds</a></div>
+      <div class="brand"><a href="/home.html">Culet Diamonds</a></div>
       <button class="icon-btn" id="close-drawer" aria-label="Close menu">Close</button>
     </header>
     <nav class="mobile-nav" aria-label="Mobile Main">
@@ -200,7 +197,7 @@
       <a href="/estate-jewelry.html">Estate Jewelry</a>
       <a href="/jewelry-program.html">Jewelry Program</a>
       <a href="/diamond-education.html">Diamond Education</a>
-      <a href="/about.html">About Us</a>
+      <a href="/aboutus.html">About Us</a>
       <a href="/contact.html">Contact Us</a>
     </nav>
   </aside>
@@ -210,7 +207,7 @@
     <div class="container hero__inner">
       <div>
         <h1>Timeless Jewelry, Crafted to Endure</h1>
-        <p>Engagement rings and fine pieces designed with meticulous attention to proportion, comfort, and exceptional light performance.</p>
+        <p>Our advanced manufacturing facilities blend cutting-edge technology with old-world artistry, producing diamonds and jewelry of unparalleled cut, clarity, color, and brilliance</p>
         <div>
           <a class="btn btn--dark inkable" href="/engagement-rings.html">Shop Engagement</a>
           <a class="btn btn--ghost inkable" href="/diamonds.html" style="margin-left:8px">Explore Diamonds</a>
@@ -264,7 +261,7 @@
           <div class="tile__media ph ph--square" aria-label="Diamond Education placeholder" role="img"></div>
           <div class="tile__label">Diamond Education <span>View</span></div>
         </a>
-        <a class="tile tile--third" href="/about.html">
+        <a class="tile tile--third" href="/aboutus.html">
           <div class="tile__media ph ph--square" aria-label="About Us placeholder" role="img"></div>
           <div class="tile__label">About Us <span>Learn</span></div>
         </a>
@@ -392,7 +389,7 @@
       </div>
       <div>
         <h4>Company</h4>
-        <a href="/about.html">About Us</a>
+        <a href="/aboutus.html">About Us</a>
         <a href="/estate-jewelry.html">Estate Jewelry</a>
         <a href="/contact.html">Contact</a>
       </div>
@@ -472,6 +469,29 @@
         }, { passive: true });
       }
       document.querySelectorAll('.inkable').forEach(attachInk);
+    })();
+
+    // Nav drag-to-scroll and vertical wheel horizontal scroll
+    (function(){
+      const nav = document.querySelector('.nav');
+      if(!nav) return;
+      let isDown = false, startX = 0, scrollLeft = 0;
+      nav.addEventListener('mousedown', (e)=>{
+        isDown = true; nav.classList.add('grabbing');
+        startX = e.pageX - nav.offsetLeft; scrollLeft = nav.scrollLeft;
+      });
+      window.addEventListener('mouseup', ()=>{ isDown = false; nav.classList.remove('grabbing'); });
+      nav.addEventListener('mouseleave', ()=>{ isDown = false; nav.classList.remove('grabbing'); });
+      nav.addEventListener('mousemove', (e)=>{
+        if(!isDown) return; e.preventDefault();
+        const x = e.pageX - nav.offsetLeft; const walk = (x - startX);
+        nav.scrollLeft = scrollLeft - walk;
+      });
+      nav.addEventListener('wheel', (e)=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          nav.scrollLeft += e.deltaY; e.preventDefault();
+        }
+      }, { passive: false });
     })();
   </script>
 </body>
