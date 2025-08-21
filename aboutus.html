@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About Us — Culet Diamonds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #121212;
+      --muted: #6b7280;
+      --accent: #b08d57; /* soft gold accent */
+      --accent-ink: #0f2e6e; /* brand blue for text hovers */
+      --border: #e7e7e7;
+      --ink-2: #0f2e6e; /* brand blue for buttons/ink */
+      --max-w: 1100px;
+      --pad: clamp(14px, 2vw, 24px);
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body { font-family: Manrope, system-ui, sans-serif; line-height: 1.6; overflow-x: hidden; }
+    h1, h2, h3 { font-family: "Cormorant Garamond", serif; color: #0b1d49; letter-spacing: .02em; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad); }
+
+    /* Header (copied style to match site) */
+    .header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+    .header__row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; padding: 12px 0; }
+    .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; letter-spacing: .08em; font-size: clamp(18px, 2.2vw, 26px); text-transform: uppercase; }
+
+    /* Nav */
+    .nav { display: flex; justify-content: center; position: relative; overflow-x: auto; scrollbar-width: none; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav__list { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 16px 20px; list-style: none; margin: 0; padding: 0; }
+    .nav__link { position: relative; display: inline-block; padding: 8px 6px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .nav__link::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .25s ease; opacity: .8; }
+    .nav__link:hover::after, .nav__link:focus::after { transform: scaleX(1); }
+    .nav__link { transition: color .2s ease; }
+    .nav__link:hover { color: var(--accent-ink); }
+    .nav__indicator { position: absolute; bottom: 0; height: 2px; width: 0; background: var(--accent); border-radius: 2px; transition: left .28s cubic-bezier(.2,.8,.2,1), width .28s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+
+    .header__actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn { background: none; border: 1px solid var(--border); padding: 8px 12px; border-radius: 999px; font-size: 13px; cursor: pointer; }
+
+    /* Mobile drawer (hidden on desktop) */
+    .hamburger { display: none; background: none; border: 1px solid var(--border); padding: 8px 12px; border-radius: 999px; }
+    .mobile-drawer { display: none; }
+    @media (max-width: 980px) {
+      .nav { display: none; }
+      .hamburger { display: inline-block; }
+      .mobile-drawer { position: fixed; inset: 0 0 0 auto; width: min(86vw, 420px); transform: translateX(100%); transition: transform .3s ease; background: var(--bg); border-left: 1px solid var(--border); z-index: 60; display: flex; flex-direction: column; }
+      .mobile-drawer.open { transform: translateX(0); }
+      .mobile-drawer header { display: flex; align-items: center; justify-content: space-between; padding: 14px var(--pad); border-bottom: 1px solid var(--border); }
+      .mobile-nav { padding: 8px var(--pad) 24px; }
+      .mobile-nav a { display: block; padding: 14px 0; border-bottom: 1px solid var(--border); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+      .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.28); opacity: 0; pointer-events: none; transition: opacity .3s ease; z-index: 55; }
+      .scrim.visible { opacity: 1; pointer-events: auto; }
+    }
+
+    /* Buttons & ink effect (to match site) */
+    .btn { display: inline-block; padding: 12px 18px; border-radius: 999px; border: 1px solid var(--ink-2); font-weight: 700; letter-spacing: .04em; cursor: pointer; }
+    .btn--dark { background: var(--ink-2); color: #fff; border-color: var(--ink-2); }
+    .inkable { position: relative; overflow: hidden; }
+    .inkable::before { content: ""; position: absolute; left: var(--mx, 50%); top: var(--my, 50%); width: 240px; height: 240px; transform: translate(-50%, -50%); background: radial-gradient( circle at center, rgba(176,141,87,0.18) 0%, rgba(176,141,87,0.12) 35%, rgba(176,141,87,0.08) 55%, rgba(176,141,87,0) 70% ); opacity: 0; transition: opacity .18s ease-out; pointer-events: none; }
+    .inkable:hover::before { opacity: 1; }
+
+    /* Page banner */
+    .banner { background: linear-gradient(180deg, #f6f8ff 0%, #ffffff 100%); border-bottom: 1px solid var(--border); padding: clamp(28px, 6vw, 80px) 0; text-align: center; }
+    .banner h1 { font-size: clamp(28px, 5vw, 56px); margin: 0; }
+    .banner p { color: #4b5563; margin: 8px 0 0; font-size: clamp(14px, 1.6vw, 18px); }
+
+    /* Content */
+    .prose { max-width: 900px; margin: 0 auto; padding: clamp(24px, 4vw, 40px) 0; font-size: 16px; color: #1f2937; }
+    .prose p { margin: 0 0 1.1em; }
+    .prose-block { margin-bottom: 1.4em; padding: 14px 18px; border-radius: var(--radius); transition: transform .25s ease, background .25s ease; cursor: default; }
+    .prose-block:hover { background: rgba(15,46,110,0.04); transform: translateY(-3px); }
+    .prose-block::before { content: ""; position: absolute; left: var(--mx,50%); top: var(--my,50%); width: 280px; height: 280px; transform: translate(-50%,-50%); background: radial-gradient(circle at center, rgba(176,141,87,0.18) 0%, rgba(176,141,87,0.08) 50%, rgba(176,141,87,0) 70%); opacity: 0; transition: opacity .25s ease-out; pointer-events: none; }
+    .prose-block.inkable:hover::before { opacity: 1; }
+    .prose-block { position: relative; overflow: hidden; }
+    .quote { font-style: italic; border-left: 3px solid var(--accent); padding-left: 14px; color: #0b1d49; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); background: #111; color: #e5e7eb; margin-top: 30px; }
+    .footer__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 34px 0; }
+    .footer h4 { margin: 0 0 10px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: #d1d5db; }
+    .footer a { color: #e5e7eb; display: block; padding: 6px 0; font-size: 14px; }
+    .footer a:hover { color: #fff; }
+    .footer__bar { border-top: 1px solid #2b2b2b; padding: 14px 0; color: #9ca3af; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="container header__row">
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-controls="mobile-drawer" aria-expanded="false">Menu</button>
+      <div class="brand"><a href="/">Culet Diamonds</a></div>
+      <nav class="nav" aria-label="Main">
+        <ul class="nav__list">
+          <li><a class="nav__link inkable" href="/engagement-rings.html">Engagement Rings</a></li>
+          <li><a class="nav__link inkable" href="/bracelets.html">Bracelets</a></li>
+          <li><a class="nav__link inkable" href="/necklaces.html">Necklaces</a></li>
+          <li><a class="nav__link inkable" href="/earrings.html">Earrings</a></li>
+          <li><a class="nav__link inkable" href="/rings.html">Rings</a></li>
+          <li><a class="nav__link inkable" href="/diamonds.html">Diamonds</a></li>
+          <li><a class="nav__link inkable" href="/estate-jewelry.html">Estate Jewelry</a></li>
+          <li><a class="nav__link inkable" href="/jewelry-program.html">Jewelry Program</a></li>
+          <li><a class="nav__link inkable" href="/diamond-education.html">Diamond Education</a></li>
+          <li><a class="nav__link inkable" href="/aboutus.html" aria-current="page">About Us</a></li>
+          <li><a class="nav__link inkable" href="/contact.html">Contact Us</a></li>
+        </ul>
+        <span class="nav__indicator" aria-hidden="true"></span>
+      </nav>
+      <div class="header__actions">
+        <button class="icon-btn inkable" aria-label="Search">Search</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile drawer -->
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true" aria-label="Mobile navigation">
+    <header>
+      <div class="brand"><a href="/">Culet Diamonds</a></div>
+      <button class="icon-btn" id="close-drawer" aria-label="Close menu">Close</button>
+    </header>
+    <nav class="mobile-nav" aria-label="Mobile Main">
+      <a href="/engagement-rings.html">Engagement Rings</a>
+      <a href="/bracelets.html">Bracelets</a>
+      <a href="/necklaces.html">Necklaces</a>
+      <a href="/earrings.html">Earrings</a>
+      <a href="/rings.html">Rings</a>
+      <a href="/diamonds.html">Diamonds</a>
+      <a href="/estate-jewelry.html">Estate Jewelry</a>
+      <a href="/jewelry-program.html">Jewelry Program</a>
+      <a href="/diamond-education.html">Diamond Education</a>
+      <a href="/aboutus.html" aria-current="page">About Us</a>
+      <a href="/contact.html">Contact Us</a>
+    </nav>
+  </aside>
+
+  <!-- Banner -->
+  <section class="banner" aria-label="About Us banner">
+    <div class="container">
+      <h1>About Culet International Corporation</h1>
+      <p>Trusted in the global diamond trade since 1979.</p>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <main class="container prose" role="main">
+    <div class="prose-block inkable"><p>Founded in 1979 by Mr. David Hazghiyan, Culet International Corporation has long been recognized as a trusted leader in the global diamond trade. From our home in New York’s Diamond District, we’ve built a reputation as the premier destination for polished diamonds, earning the confidence of manufacturers, wholesalers, and jewelers worldwide.</p></div>
+
+    <div class="prose-block inkable"><p>As a family-owned business, we hold firm to the values of integrity, service, and partnership. Mr. Hazghiyan and his son Jonathan believe that <span class="quote">“You must buy well to sell well.”</span> That philosophy guides our commitment to delivering not only the finest diamonds, but also the most competitive pricing—ensuring our customers’ success. When you work with Culet, you’re not just a client; you’re part of our family.</p></div>
+
+    <div class="prose-block inkable"><p>Over the decades, we have supplied countless jewelry manufacturers and wholesalers with premium polished diamonds. Building on this foundation, we’ve now harnessed our manufacturing resources and decades of expertise to create exceptional fine jewelry collections. This natural evolution allows us to pair world-class craftsmanship with unmatched value, offering our clients both loose diamonds and finished jewelry at the industry’s most competitive prices.</p></div>
+
+    <div class="prose-block inkable"><p>Our advanced manufacturing facilities blend cutting-edge technology with old-world artistry, producing diamonds and jewelry of unparalleled cut, clarity, color, and brilliance. Every stone and every piece is sourced exclusively from authorized, conflict-free suppliers in established diamond-producing countries, reflecting our commitment to ethical business practices.</p></div>
+
+    <div class="prose-block inkable"><p>We welcome you to visit our New York City headquarters or connect with one of our international offices, where our team is ready to provide personalized, family-style service and ensure that your experience with Culet International Corporation exceeds expectations.</p></div>
+
+    <div style="height:20px"></div>
+    <a class="btn btn--dark inkable" href="/contact.html">Contact Us</a>
+  </main>
+
+  <!-- Footer (copy to match site) -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer__grid">
+      <div>
+        <h4>Shop</h4>
+        <a href="/engagement-rings.html">Engagement Rings</a>
+        <a href="/necklaces.html">Necklaces</a>
+        <a href="/bracelets.html">Bracelets</a>
+        <a href="/earrings.html">Earrings</a>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <a href="/diamond-education.html">Diamond Education</a>
+        <a href="/jewelry-program.html">Jewelry Program</a>
+        <a href="/diamonds.html">Loose Diamonds</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="/aboutus.html" aria-current="page">About Us</a>
+        <a href="/estate-jewelry.html">Estate Jewelry</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a href="tel:+1-000-000-0000">+1 (000) 000‑0000</a>
+        <a href="mailto:hello@culetdiamonds.com">hello@culetdiamonds.com</a>
+        <a href="#">Book an appointment</a>
+      </div>
+    </div>
+    <div class="container footer__bar">© <span id="year"></span> Culet Diamonds. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Mobile drawer controls
+    const drawer = document.getElementById('mobile-drawer');
+    const scrim = document.getElementById('scrim');
+    const openBtn = document.getElementById('hamburger');
+    const closeBtn = document.getElementById('close-drawer');
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      scrim.hidden = false; scrim.classList.add('visible');
+      openBtn.setAttribute('aria-expanded', 'true');
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      scrim.classList.remove('visible');
+      setTimeout(()=>{ scrim.hidden = true; }, 250);
+      openBtn.setAttribute('aria-expanded', 'false');
+    }
+    openBtn?.addEventListener('click', openDrawer);
+    closeBtn?.addEventListener('click', closeDrawer);
+    scrim?.addEventListener('click', closeDrawer);
+
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Sliding underline indicator for nav (match homepage behavior)
+    (function(){
+      const nav = document.querySelector('.nav');
+      const indicator = document.querySelector('.nav__indicator');
+      const links = document.querySelectorAll('.nav__link');
+      if(!nav || !indicator || !links.length) return;
+      function moveIndicator(el){
+        const navRect = nav.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        const left = rect.left - navRect.left + nav.scrollLeft;
+        indicator.style.left = left + 'px';
+        indicator.style.width = rect.width + 'px';
+      }
+      links.forEach(link => {
+        link.addEventListener('mouseenter', () => moveIndicator(link));
+        link.addEventListener('focus', () => moveIndicator(link));
+      });
+      nav.addEventListener('mouseleave', () => { indicator.style.width = 0; });
+      moveIndicator(links[0]);
+      setTimeout(()=> indicator.style.width = 0, 150);
+    })();
+
+    // Ink shimmer position tracking
+    (function(){
+      function attachInk(el){
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          el.style.setProperty('--mx', x + 'px');
+          el.style.setProperty('--my', y + 'px');
+        }, { passive: true });
+      }
+      document.querySelectorAll('.inkable').forEach(attachInk);
+    })();
+  </script>
+</body>
+</html>
