@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Portal — Culet Diamonds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#f8fafc; --ink:#0f2e6e; --gold:#b08d57; --muted:#6b7280; --border:#e5e7eb; --danger:#b91c1c; --ok:#065f46;
+      --radius:12px; --shadow:0 10px 30px rgba(0,0,0,.06); --max:1100px; --pad:clamp(14px,2vw,24px);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:#111}
+    body{font-family:Manrope,system-ui,sans-serif;line-height:1.6}
+    h1,h2,h3{font-family:"Cormorant Garamond",serif;color:#0b1d49;letter-spacing:.02em}
+    a{text-decoration:none;color:inherit}
+    .container{max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border)}
+    .header__row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+    .brand{font-family:"Cormorant Garamond",serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:22px}
+    .btn{display:inline-block;padding:10px 14px;border:1px solid var(--ink);border-radius:999px;font-weight:700;letter-spacing:.03em;cursor:pointer;background:#fff}
+    .btn--dark{background:var(--ink);color:#fff}
+    .btn--danger{border-color:var(--danger);color:#fff;background:var(--danger)}
+
+    /* Layout */
+    .grid{display:grid;grid-template-columns:350px 1fr;gap:20px;margin:22px 0}
+    @media (max-width: 960px){ .grid{grid-template-columns:1fr} }
+
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel__head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .panel__body{padding:16px 18px}
+    .muted{color:var(--muted)}
+    .ok{color:var(--ok)}
+    .err{color:var(--danger)}
+
+    /* Forms */
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+    .field input[type=text], .field input[type=number], .field textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit}
+    .field textarea{min-height:90px;resize:vertical}
+    .row{display:flex;gap:10px}
+    .row .field{flex:1}
+    .filebox{border:1px dashed #cbd5e1;padding:14px;border-radius:10px;background:#fff}
+    .thumb{width:100%;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--border);background:#f3f4f6 center/cover no-repeat}
+
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
+    .table th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#374151}
+    .actions{display:flex;gap:8px}
+
+    .hidden{display:none !important}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px;background:#fff}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.dot.white{background:#cfd6e3}
+.dot.yellow{background:#d8b24d}
+.dot.rose{background:#d28b7b}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container header__row">
+      <div class="brand"><a href="/">Culet Diamonds — Admin</a></div>
+      <div>
+        <button id="signOutBtn" class="btn hidden">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="debugBar" class="container" style="font-size:12px;color:#4b5563;padding:6px 0;">
+    <span>UID: <code id="dbgUid">—</code></span> ·
+    <span>Admin: <strong id="dbgIsAdmin">false</strong></span> ·
+    <span>Bucket cfg: <code id="dbgBucketCfg">—</code></span> ·
+    <span>Bucket ref: <code id="dbgBucketRef">—</code></span>
+  </div>
+
+  <main class="container">
+    <!-- Auth Gate -->
+    <section id="authGate" class="panel" aria-live="polite">
+      <div class="panel__head"><strong>Admin Sign‑in</strong></div>
+      <div class="panel__body">
+        <p class="muted" id="authMsg">Please sign in with an admin account to manage inventory.</p>
+        <form id="signinForm" class="row" autocomplete="on">
+          <div class="field"><label for="email">Email</label><input id="email" type="text" required></div>
+          <div class="field"><label for="password">Password</label><input id="password" type="password" required></div>
+          <div class="field" style="align-self:flex-end"><button class="btn btn--dark" type="submit">Sign in</button></div>
+        </form>
+        <p class="muted">Admin access is granted if your UID exists at <code>admins/{uid}</code> in Firestore.</p>
+      </div>
+    </section>
+
+    <!-- Not admin notice -->
+    <section id="notAdmin" class="panel hidden">
+      <div class="panel__head"><strong>Access restricted</strong></div>
+      <div class="panel__body">
+        <p class="err">You're signed in but not authorized as an admin.</p>
+        <p class="muted">Ask the owner to add a document at <code>admins/{your uid}</code> in Firestore.</p>
+      </div>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <section id="dash" class="grid hidden" aria-live="polite">
+      <!-- Creator -->
+      <div class="panel">
+        <div class="panel__head"><strong>Create / Edit Ring</strong><span id="status" class="badge">Idle</span></div>
+        <div class="panel__body">
+          <form id="ringForm">
+            <div class="field"><label for="docId">Document ID (e.g., r11). Leave blank to auto‑generate.</label><input id="docId" type="text" placeholder="r11" /></div>
+            <div class="field"><label for="title">Title</label><input id="title" type="text" required /></div>
+            <div class="field"><label for="description">Description</label><textarea id="description" required></textarea></div>
+            <div class="row">
+              <div class="field">
+                <label for="category">Category</label>
+                <select id="category" required>
+                  <option value="ENGAGEMENT RINGS">ENGAGEMENT RINGS</option>
+                  <option value="BRACELETS">BRACELETS</option>
+                  <option value="NECKLACES">NECKLACES</option>
+                  <option value="EARRINGS">EARRINGS</option>
+                  <option value="RINGS">RINGS</option>
+                  <option value="DIAMONDS">DIAMONDS</option>
+                  <option value="ESTATE JEWELRY">ESTATE JEWELRY</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label for="shopifyVariantId">Shopify Variant GID (optional)</label><input id="shopifyVariantId" type="text" placeholder="gid://shopify/ProductVariant/1234567890" /></div>
+              <div class="field"><label for="shopifyCheckoutUrl">Shopify Checkout URL (optional)</label><input id="shopifyCheckoutUrl" type="text" placeholder="https://yourshop.myshopify.com/...." /></div>
+            </div>
+            <div class="filebox">
+  <div class="row">
+    <div class="field">
+      <label for="colorSelect">Color (image slot)</label>
+      <select id="colorSelect">
+        <option value="white">white</option>
+        <option value="yellow">yellow</option>
+        <option value="rose">rose</option>
+      </select>
+    </div>
+    <div class="field" style="flex:2">
+      <label for="colorImage">Upload image (JPG/PNG, &lt; 5MB)</label>
+      <input id="colorImage" type="file" accept="image/*" />
+    </div>
+  </div>
+  <div class="thumb" id="thumb"></div>
+  <div id="colorBadges" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+  <small class="muted">Stored at <code>rings/{docId}/{color}/{filename}</code></small>
+</div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn btn--dark" type="submit">Save</button>
+              <button class="btn" type="reset" id="resetBtn">Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Inventory list -->
+      <div class="panel">
+        <div class="panel__head">
+          <strong id="listTitle">Catalog</strong>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label class="muted" for="listCategory" style="font-size:12px">Category</label>
+            <select id="listCategory">
+              <option value="ENGAGEMENT RINGS">ENGAGEMENT RINGS</option>
+              <option value="BRACELETS">BRACELETS</option>
+              <option value="NECKLACES">NECKLACES</option>
+              <option value="EARRINGS">EARRINGS</option>
+              <option value="RINGS">RINGS</option>
+              <option value="DIAMONDS">DIAMONDS</option>
+              <option value="ESTATE JEWELRY">ESTATE JEWELRY</option>
+            </select>
+            <span class="badge" id="count">0</span>
+          </div>
+        </div>
+        <div class="panel__body">
+          <table class="table" id="ringsTable" aria-label="Rings table">
+            <thead>
+              <tr><th>ID</th><th>Title</th><th>Image</th><th>Category</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Firebase (module) -->
+  <script type="module">
+    // Firebase SDKs
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js';
+    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-storage.js';
+
+    // --- CONFIG: your Firebase project (public) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYaGgQ-7GK2vm0nTJ5vjGBLE4LfHT4lOQ",
+      authDomain: "culetdiamonds-18621.firebaseapp.com",
+      projectId: "culetdiamonds-18621",
+      storageBucket: "culetdiamonds-18621.firebasestorage.app",
+      messagingSenderId: "373411619102",
+      appId: "1:373411619102:web:d3689d7bfb2ea620d4690f",
+      measurementId: "G-J3W656N9JE"
+    };
+
+    // Init singletons
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Debug UI refs
+    const dbgUid = document.getElementById('dbgUid');
+    const dbgIsAdmin = document.getElementById('dbgIsAdmin');
+    const dbgBucketCfg = document.getElementById('dbgBucketCfg');
+    const dbgBucketRef = document.getElementById('dbgBucketRef');
+    dbgBucketCfg.textContent = firebaseConfig.storageBucket;
+    try { dbgBucketRef.textContent = (await import('https://www.gstatic.com/firebasejs/10.12.1/firebase-storage.js')).ref(storage).toString(); } catch {}
+    if (location.protocol === 'file:') {
+      console.warn('Running from file:// can cause CORS/preflight issues. Use a local server (e.g., `npx serve`) or Firebase Hosting.');
+    }
+
+    async function refreshDebug(user){
+      if(!dbgUid) return; // in case debug bar is removed
+      if(!user){
+        dbgUid.textContent = '—';
+        dbgIsAdmin.textContent = 'false';
+        return;
+      }
+      dbgUid.textContent = user.uid;
+      try {
+        const s = await getDoc(doc(db,'admins', user.uid));
+        dbgIsAdmin.textContent = String(s.exists());
+      } catch (e) {
+        dbgIsAdmin.textContent = 'error';
+        console.warn('Admin check error', e);
+      }
+    }
+
+    // Helper to safely resolve Storage paths to download URLs
+    async function resolveStorageBackground(el, path){
+      if (!path) return;
+      try {
+        const url = await getDownloadURL(ref(storage, path));
+        el.style.backgroundImage = `url('${url}')`;
+      } catch (e) {
+        console.warn('[storage:url:error]', path, e);
+      }
+    }
+
+    // Migrate any legacy elements that might still use data-storage-path
+    document.querySelectorAll('[data-storage-path]').forEach(async (node) => {
+      await resolveStorageBackground(node, node.getAttribute('data-storage-path'));
+      node.removeAttribute('data-storage-path');
+    });
+
+    // Category mapping: display name -> Firestore collection id (URL/ID-safe)
+    const CATEGORY_MAP = {
+      'ENGAGEMENT RINGS': 'engagement_rings',
+      'BRACELETS': 'bracelets',
+      'NECKLACES': 'necklaces',
+      'EARRINGS': 'earrings',
+      'RINGS': 'rings',
+      'DIAMONDS': 'diamonds',
+      'ESTATE JEWELRY': 'estate_jewelry'
+    };
+    const listCategorySel = document.getElementById('listCategory');
+    const listTitleEl = document.getElementById('listTitle');
+    function getCollectionId(display){ return CATEGORY_MAP[display] || 'rings'; }
+
+    // UI helpers
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const authGate = $('#authGate');
+    const dash = $('#dash');
+    const notAdmin = $('#notAdmin');
+    const signOutBtn = $('#signOutBtn');
+    const signinForm = $('#signinForm');
+    const authMsg = $('#authMsg');
+
+    // Sign in/out
+    signinForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = $('#email').value.trim();
+      const password = $('#password').value;
+      try{ await signInWithEmailAndPassword(auth, email, password); }
+      catch(err){ authMsg.textContent = 'Sign-in failed: ' + (err?.message || err); }
+    });
+    signOutBtn.addEventListener('click', ()=> signOut(auth));
+
+    // Admin check: a doc at admins/{uid} must exist
+    async function isAdmin(uid){
+      const s = await getDoc(doc(db,'admins', uid));
+      return s.exists();
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
+      await refreshDebug(user);
+      if(!user){
+        authGate.classList.remove('hidden');
+        dash.classList.add('hidden');
+        notAdmin.classList.add('hidden');
+        signOutBtn.classList.add('hidden');
+        return;
+      }
+      // signed in; check admin
+      if(await isAdmin(user.uid)){
+        authGate.classList.add('hidden');
+        notAdmin.classList.add('hidden');
+        dash.classList.remove('hidden');
+        signOutBtn.classList.remove('hidden');
+        loadRings();
+      }else{
+        authGate.classList.add('hidden');
+        dash.classList.add('hidden');
+        notAdmin.classList.remove('hidden');
+        signOutBtn.classList.remove('hidden');
+      }
+    });
+
+    // Create / Edit form logic
+    const form = $('#ringForm');
+    const status = $('#status');
+    const thumb = $('#thumb');
+    const resetBtn = $('#resetBtn');
+
+    const colorSelect = document.getElementById('colorSelect');
+const colorImage = document.getElementById('colorImage');
+const colorBadges = document.getElementById('colorBadges');
+
+const colorFiles = new Map();
+const existingColorPaths = new Map();
+
+function renderBadges(){
+  colorBadges.innerHTML = '';
+  ['white','yellow','rose'].forEach(c=>{
+    const hasNew = colorFiles.has(c);
+    const hasExisting = existingColorPaths.has(c);
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `<span class="dot ${c}"></span><span>${c}</span>${hasNew ? '<strong> • new</strong>' : (hasExisting ? ' • saved' : '')}`;
+    colorBadges.appendChild(chip);
+  });
+}
+
+async function previewCurrentColor(){
+  const c = colorSelect.value;
+  if (colorFiles.has(c)){
+    const f = colorFiles.get(c);
+    const reader = new FileReader();
+    reader.onload = ()=>{ thumb.style.backgroundImage = `url(${reader.result})`; };
+    reader.readAsDataURL(f);
+    return;
+  }
+  if (existingColorPaths.has(c)){
+    try {
+      const url = await getDownloadURL(ref(storage, existingColorPaths.get(c)));
+      thumb.style.backgroundImage = `url(${url})`;
+      return;
+    } catch {}
+  }
+  thumb.style.backgroundImage = '';
+}
+
+colorImage.addEventListener('change', (e)=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+  if(!f.type.startsWith('image/')){ alert('Please select an image.'); e.target.value=''; return; }
+  if(f.size > 5*1024*1024){ alert('Image must be under 5MB.'); e.target.value=''; return; }
+  colorFiles.set(colorSelect.value, f);
+  previewCurrentColor();
+  renderBadges();
+});
+
+colorSelect.addEventListener('change', ()=>{ previewCurrentColor(); });
+renderBadges();
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+
+      const docIdInput = $('#docId').value.trim();
+      const title = $('#title').value.trim();
+      const description = $('#description').value.trim();
+      const category = $('#category').value; // display name as selected in <select>
+      const collectionId = getCollectionId(category);
+      const shopifyVariantId = $('#shopifyVariantId').value.trim() || null;
+      const shopifyCheckoutUrl = $('#shopifyCheckoutUrl').value.trim() || null;
+      const file = $('#image').files?.[0] || null;
+
+      if(!title || !description){ alert('Title and description are required.'); return; }
+
+      status.textContent = 'Saving…';
+      let ringRef = null;
+      let createdDocId = null;
+      try {
+        // 1) Create/prepare Firestore doc FIRST to obtain a stable docId
+        if (docIdInput) {
+          ringRef = doc(db, collectionId, docIdInput);
+          await setDoc(ringRef, {
+            title, description, category, collectionId,
+            shopifyVariantId, shopifyCheckoutUrl,
+            imagePath: $('#image').dataset.prevPath || null,
+            imageURL: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } else {
+          ringRef = doc(collection(db, collectionId));
+          await setDoc(ringRef, {
+            title, description, category, collectionId,
+            shopifyVariantId, shopifyCheckoutUrl,
+            imagePath: null,
+            imageURL: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        }
+        createdDocId = ringRef.id;
+
+        // 2) Upload image (if provided) to rings/{docId}/{safeName}
+        // 2) Upload images per color
+const imagesByColor = {};
+for (const [color, f] of colorFiles.entries()){
+  const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = `rings/${ringRef.id}/${color}/${safeName}`;
+  const storageRef = ref(storage, path);
+  await new Promise((resolve, reject)=>{
+    const task = uploadBytesResumable(storageRef, f, { contentType: f.type });
+    task.on('state_changed', null, reject, resolve);
+  });
+  const url = await getDownloadURL(storageRef);
+  imagesByColor[color] = { path, url };
+}
+existingColorPaths.forEach((path, color)=>{
+  if (!imagesByColor[color]) imagesByColor[color] = { path, url: null };
+});
+
+let imagePath = null, imageURL = null;
+for (const c of ['white','yellow','rose']){
+  if (imagesByColor[c]){ imagePath = imagesByColor[c].path; imageURL = imagesByColor[c].url || null; break; }
+}
+if (!imagePath){
+  const first = Object.values(imagesByColor)[0];
+  if (first){ imagePath = first.path; imageURL = first.url || null; }
+}
+
+        // 3) Update the same doc with image metadata
+        await updateDoc(ringRef, {
+  imagePath: imagePath || null,
+  imageURL: imageURL || null,
+  imagesByColor: imagesByColor,
+  colors: Object.keys(imagesByColor),
+  updatedAt: serverTimestamp()
+});
+
+        status.textContent = 'Saved';
+        form.reset();
+        colorFiles.clear();
+existingColorPaths.clear();
+renderBadges();
+        thumb.style.backgroundImage = '';
+        $('#image').dataset.prevPath='';
+        $('#docId').value='';
+        await loadRings();
+      } catch (err) {
+        console.error('[save:error]', err);
+        status.textContent = 'Error';
+        alert('Save failed: ' + (err?.message || err));
+        // Optional rollback: if doc was just created and upload failed before update, leave as-is for now
+      } finally {
+        setTimeout(()=> status.textContent='Idle', 1200);
+      }
+    });
+
+resetBtn.addEventListener('click', ()=>{
+  thumb.style.backgroundImage='';
+  $('#image').dataset.prevPath='';
+  $('#docId').value='';
+  // clear per‑color state
+  colorFiles.clear();
+  existingColorPaths.clear();
+  renderBadges();
+});
+
+    // List + edit + delete
+    const tableBody = $('#ringsTable tbody');
+    async function loadRings(){
+      const display = listCategorySel?.value || 'ENGAGEMENT RINGS';
+      const colId = getCollectionId(display);
+      listTitleEl.textContent = display;
+      const snap = await getDocs(collection(db, colId));
+      tableBody.innerHTML = '';
+      $('#count').textContent = snap.size;
+      const rows = await Promise.all(snap.docs.map(async (d)=>{
+        const r = d.data();
+        const tr = document.createElement('tr');
+        const imgCell = document.createElement('td');
+        imgCell.innerHTML = r.imagePath || r.image
+          ? `<div class="ring-thumb" style="width:56px;height:56px;border-radius:8px;background:#eee center/cover no-repeat"></div>`
+          : '<span class="muted">—</span>';
+        tr.innerHTML = `
+          <td>${d.id}</td>
+          <td>${r.title || ''}</td>
+          <td></td>
+          <td>${r.category || ''}</td>
+          <td class="actions">
+            <button class="btn" data-act="edit" data-id="${d.id}">Edit</button>
+            <button class="btn btn--danger" data-act="del" data-id="${d.id}">Delete</button>
+          </td>`;
+        tr.children[2].replaceWith(imgCell);
+
+        // Resolve image using new fields first, then legacy
+        const path = r.imagePath || r.image || null;
+        if (path) {
+          try {
+            const url = await getDownloadURL(ref(storage, path));
+            const holder = imgCell.querySelector('.ring-thumb');
+            if (holder) holder.style.backgroundImage = `url('${url}')`;
+          } catch (e) {
+            console.warn('Thumb load failed for', path, e);
+          }
+        }
+        return tr;
+      }));
+
+      tableBody.innerHTML = '';
+      rows.forEach(tr => tableBody.appendChild(tr));
+      // actions
+      tableBody.querySelectorAll('button[data-act]').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.dataset.id;
+          if(btn.dataset.act==='edit'){
+            const colId = getCollectionId(listCategorySel.value);
+            const s = await getDoc(doc(db, colId, id)); if(!s.exists()) return;
+            const r = s.data();
+            $('#docId').value = id;
+            $('#title').value = r.title || '';
+            $('#description').value = r.description || '';
+            // $('#colors').value = (r.colors||[]).join(', ');
+            $('#category').value = r.category || listCategorySel.value;
+            $('#shopifyVariantId').value = r.shopifyVariantId || '';
+            $('#shopifyCheckoutUrl').value = r.shopifyCheckoutUrl || '';
+            // Load existing per‑color images and preview current color
+            existingColorPaths.clear();
+            const map = r.imagesByColor || {};
+            for (const [c, obj] of Object.entries(map)){
+              if (obj && obj.path) existingColorPaths.set(c, obj.path);
+            }
+            renderBadges();
+            await previewCurrentColor();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if(btn.dataset.act==='del'){
+            if(!confirm('Delete this item? This cannot be undone.')) return;
+            const colId = getCollectionId(listCategorySel.value);
+            await deleteDoc(doc(db, colId, id));
+            await loadRings();
+          }
+        });
+      });
+    }
+
+    if (listCategorySel) {
+      listCategorySel.addEventListener('change', ()=> loadRings());
+    }
+  </script>
+</body>
+</html>

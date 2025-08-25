@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Engagement Rings — Culet Diamonds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #121212;
+      --muted: #6b7280;
+      --accent: #b08d57; /* soft gold */
+      --accent-ink: #0f2e6e; /* brand blue hover */
+      --ink-2: #0f2e6e; /* brand blue base */
+      --border: #e7e7e7;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --max-w: 1200px;
+      --pad: clamp(14px, 2vw, 24px);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body { font-family: Manrope, system-ui, sans-serif; line-height: 1.6; }
+    h1, h2 { font-family: "Cormorant Garamond", serif; letter-spacing: .02em; color: #0b1d49; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad); }
+
+    /* Header (match site) */
+    .header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+    .header__row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; padding: 10px 0; }
+    .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .brand a { display: inline-block; padding: 4px 0; font-size: clamp(16px, 2vw, 22px); }
+
+    /* Nav */
+    .nav { display: flex; justify-content: center; position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav.grabbing { cursor: grabbing; }
+    .nav__list { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 10px 12px; list-style: none; margin: 0; padding: 0; }
+    .nav__link { display: inline-block; padding: 6px 2px; font-size: 13px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase; position: relative; transition: color .2s ease; }
+    .nav__link::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .25s ease; opacity: .8; }
+    .nav__link:hover { color: var(--accent-ink); }
+    .nav__link:hover::after, .nav__link:focus::after { transform: scaleX(1); }
+    .nav__indicator { position: absolute; bottom: 0; height: 2px; width: 0; background: var(--accent); border-radius: 2px; transition: left .28s cubic-bezier(.2,.8,.2,1), width .28s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+
+    /* Page head */
+    .banner { background: #ffffff; padding: clamp(24px, 5vw, 64px) 0; text-align: center; }
+    .banner h1 { margin: 0; font-size: clamp(28px, 5vw, 48px); text-align: center; }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 300px));
+      gap: 24px;
+      padding: clamp(18px, 3vw, 28px) 0;
+      justify-content: center; /* center the whole grid block */
+      justify-items: center;   /* center items inside their tracks */
+      perspective: 1200px;     /* keep the existing 3D context */
+    }
+    @media (max-width: 1100px) { .grid { justify-content: center; } }
+    @media (max-width: 760px)  { .grid { justify-content: center; } }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px; /* fixed column width to enable true centering */
+    }
+    .card__media { border-radius: var(--radius); border: 1px dashed #d9dde6; aspect-ratio: 1 / 1; background: repeating-linear-gradient(45deg, #f3f5fa, #f3f5fa 10px, #edf0f7 10px, #edf0f7 20px); position: relative; overflow: hidden; }
+    .card__title { font-weight: 700; }
+    .card__meta { color: #6b7280; font-size: 13px; }
+    .price { font-weight: 700; }
+
+    /* Loader animation */
+    .loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 0;
+    }
+    .loader:after {
+      content: "";
+      width: 40px;
+      height: 40px;
+      border: 4px solid #d1d5db;
+      border-top-color: var(--accent-ink);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Luxury hover-motion */
+    .grid { perspective: 1200px; }
+    .card {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+      will-change: transform, box-shadow;
+    }
+    .card:hover { box-shadow: 0 18px 46px rgba(0,0,0,.14); }
+
+    /* Parallax media lift */
+    .card__media { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .25s ease; will-change: transform; }
+    .card:hover .card__media { transform: translateZ(30px) scale(1.015); }
+
+    /* Subtle reflective sweep that follows the cursor */
+    .card__media::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient( 120px 120px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,0) 60% ),
+                  linear-gradient( 60deg, rgba(176,141,87,.18), rgba(176,141,87,0) 40% );
+      mix-blend-mode: screen;
+      opacity: 0; transition: opacity .25s ease;
+      pointer-events: none;
+    }
+    .card:hover .card__media::after { opacity: .6; }
+
+    /* Reduced motion respect */
+    @media (prefers-reduced-motion: reduce) {
+      .card, .card__media { transition: none !important; }
+      .card { transform: none !important; }
+      .card__media { transform: none !important; }
+      .card__media::after { display: none; }
+    }
+
+    /* Swatches */
+    .swatches { display: flex; gap: 8px; align-items: center; }
+    .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; outline: 1px solid #d1d5db; cursor: pointer; position: relative; }
+    .swatch[aria-pressed="true"] { outline-color: var(--accent-ink); box-shadow: 0 0 0 2px rgba(15,46,110,.15); }
+    .swatch--white { background: linear-gradient(135deg, #eef2f7, #cfd6e3); }
+    .swatch--yellow { background: linear-gradient(135deg, #f0d481, #d8b24d); }
+    .swatch--rose { background: linear-gradient(135deg, #f0b2a1, #d28b7b); }
+
+    .btn { display: inline-block; padding: 10px 14px; border: 1px solid var(--ink-2); border-radius: 999px; font-weight: 700; letter-spacing: .03em; cursor: pointer; }
+    .btn--dark { background: var(--ink-2); color: #fff; }
+
+    /* Ink shimmer (reuse) */
+    .inkable { position: relative; overflow: hidden; }
+    .inkable::before { content: ""; position: absolute; left: var(--mx, 50%); top: var(--my, 50%); width: 220px; height: 220px; transform: translate(-50%, -50%); background: radial-gradient(circle at center, rgba(176,141,87,0.18) 0%, rgba(176,141,87,0.1) 40%, rgba(176,141,87,0) 65%); opacity: 0; transition: opacity .18s ease-out; pointer-events: none; }
+    .inkable:hover::before { opacity: 1; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="container header__row">
+      <div class="brand"><a href="/">Culet Diamonds</a></div>
+      <nav class="nav" aria-label="Main">
+        <ul class="nav__list">
+          <li><a class="nav__link inkable" href="/engagement-rings.html" aria-current="page">Engagement Rings</a></li>
+          <li><a class="nav__link inkable" href="/bracelets.html">Bracelets</a></li>
+          <li><a class="nav__link inkable" href="/necklaces.html">Necklaces</a></li>
+          <li><a class="nav__link inkable" href="/earrings.html">Earrings</a></li>
+          <li><a class="nav__link inkable" href="/rings.html">Rings</a></li>
+          <li><a class="nav__link inkable" href="/diamonds.html">Diamonds</a></li>
+          <li><a class="nav__link inkable" href="/estate-jewelry.html">Estate Jewelry</a></li>
+          <li><a class="nav__link inkable" href="/jewelry-program.html">Jewelry Program</a></li>
+          <li><a class="nav__link inkable" href="/diamond-education.html">Diamond Education</a></li>
+          <li><a class="nav__link inkable" href="/aboutus.html">About Us</a></li>
+          <li><a class="nav__link inkable" href="/contact.html">Contact Us</a></li>
+        </ul>
+        <span class="nav__indicator" aria-hidden="true"></span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Banner -->
+  <section class="banner">
+    <div class="container">
+      <h1 style="margin:0">Engagement Rings</h1>
+    </div>
+  </section>
+
+  <!-- Grid of rings -->
+  <main class="container" role="main">
+    <section aria-label="Ring grid">
+      <!-- Dynamic grid populated from Firestore -->
+      <div id="ringGrid" class="grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Footer (light) -->
+  <footer class="footer" role="contentinfo" style="border-top:1px solid var(--border); background:#111; color:#e5e7eb;">
+    <div class="container" style="padding:20px 0; font-size:13px;">© <span id="year"></span> Culet Diamonds.</div>
+  </footer>
+
+  
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Sliding underline indicator for nav + drag scroll
+    (function(){
+      const nav = document.querySelector('.nav');
+      const indicator = document.querySelector('.nav__indicator');
+      const links = document.querySelectorAll('.nav__link');
+      if(!nav || !indicator || !links.length) return;
+      function moveIndicator(el){
+        const navRect = nav.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        const left = rect.left - navRect.left + nav.scrollLeft;
+        indicator.style.left = left + 'px';
+        indicator.style.width = rect.width + 'px';
+      }
+      links.forEach(link => { link.addEventListener('mouseenter', () => moveIndicator(link)); link.addEventListener('focus', () => moveIndicator(link)); });
+      nav.addEventListener('mouseleave', () => { indicator.style.width = 0; });
+      moveIndicator(links[0]); setTimeout(()=> indicator.style.width = 0, 150);
+
+      // drag scroll
+      let isDown=false, startX=0, startScroll=0;
+      nav.addEventListener('mousedown',(e)=>{isDown=true; nav.classList.add('grabbing'); startX=e.pageX-nav.offsetLeft; startScroll=nav.scrollLeft;});
+      window.addEventListener('mouseup',()=>{isDown=false; nav.classList.remove('grabbing');});
+      nav.addEventListener('mouseleave',()=>{isDown=false; nav.classList.remove('grabbing');});
+      nav.addEventListener('mousemove',(e)=>{ if(!isDown) return; e.preventDefault(); const x=e.pageX-nav.offsetLeft; nav.scrollLeft = startScroll - (x-startX); });
+      nav.addEventListener('wheel',(e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)) { nav.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
+    })();
+
+    // Ink shimmer position tracking (for buttons/links)
+    (function(){
+      function attachInk(el){
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+          el.style.setProperty('--mx', x + 'px'); el.style.setProperty('--my', y + 'px');
+        }, { passive: true });
+      }
+      document.querySelectorAll('.inkable').forEach(attachInk);
+    })();
+
+    // Color swatch interactions: toggle active and tint the media border
+    (function(){
+      const tint = {
+        white: '#cfd6e3',
+        yellow: '#d8b24d',
+        rose: '#d28b7b'
+      };
+      document.querySelectorAll('.card').forEach(card => {
+        const media = card.querySelector('.card__media');
+        card.querySelectorAll('.swatch').forEach(btn => {
+          btn.addEventListener('click', () => {
+            card.querySelectorAll('.swatch').forEach(b=> b.setAttribute('aria-pressed','false'));
+            btn.setAttribute('aria-pressed','true');
+            const c = btn.dataset.color; media.style.borderColor = tint[c] || '#d9dde6';
+          });
+        });
+      });
+    })();
+
+    // Luxury card tilt + shimmer follow
+    (function(){
+      const cards = document.querySelectorAll('.card');
+      let raf = null;
+
+      function attach(card){
+        let rx = 0, ry = 0; // target rotations
+        let mx = 0, my = 0; // mouse within card
+        const damp = 0.12;  // easing
+
+        function onMove(e){
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const px = (x / rect.width) * 2 - 1;   // -1..1
+          const py = (y / rect.height) * 2 - 1;  // -1..1
+          // rotation limits
+          ry = -px * 6; // Y rotates opposite to mouse X
+          rx =  py * 6; // X rotates with mouse Y
+          mx = x; my = y;
+          if (!raf) raf = requestAnimationFrame(update);
+        }
+
+        function onLeave(){
+          rx = 0; ry = 0;
+          if (!raf) raf = requestAnimationFrame(update);
+        }
+
+        function update(){
+          // read existing transform to ease toward target
+          const m = card._rot || {x:0,y:0};
+          m.x += (rx - m.x) * damp;
+          m.y += (ry - m.y) * damp;
+          card._rot = m;
+          card.style.transform = `rotateX(${m.x.toFixed(2)}deg) rotateY(${m.y.toFixed(2)}deg)`;
+          // pass mouse to media highlight
+          card.style.setProperty('--mx', mx + 'px');
+          card.style.setProperty('--my', my + 'px');
+          raf = null;
+        }
+
+        card.addEventListener('mousemove', onMove, { passive: true });
+        card.addEventListener('mouseleave', onLeave);
+      }
+
+      cards.forEach(attach);
+    })();
+  </script>
+</script>
+
+<script type="module">
+  // Firebase SDKs
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js';
+  import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
+  import { getStorage, ref, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-storage.js';
+
+  // If the app is already initialized on the site, reuse it; otherwise init with your project config
+  const firebaseConfig = {
+    apiKey: 'AIzaSyCYaGgQ-7GK2vm0nTJ5vjGBLE4LfHT4lOQ',
+    authDomain: 'culetdiamonds-18621.firebaseapp.com',
+    projectId: 'culetdiamonds-18621',
+    storageBucket: 'culetdiamonds-18621.firebasestorage.app',
+  };
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  const grid = document.getElementById('ringGrid');
+
+  function swatchMarkup(colors = ['white','yellow','rose']){
+    const colorSet = Array.from(new Set(colors));
+    const map = {
+      white: 'swatch swatch--white',
+      yellow: 'swatch swatch--yellow',
+      rose: 'swatch swatch--rose'
+    };
+    return `
+      <div class="swatches" role="group" aria-label="Choose metal color">
+        ${colorSet.map((c,i)=>`<button class="${map[c]||'swatch'}" aria-pressed="${i===0?'true':'false'}" title="${(c||'').replace(/^\w/,m=>m.toUpperCase())} Gold" data-color="${c}"></button>`).join('')}
+      </div>
+    `;
+  }
+
+  function createCard(doc){
+    const d = doc.data();
+    const el = document.createElement('article');
+    el.className = 'card';
+    el.setAttribute('data-id', doc.id);
+
+    el.innerHTML = `
+      <div class="card__media" aria-label="${d.title||'Ring'} image"></div>
+      <div class="card__title">${d.title || ''}</div>
+      <div class="card__meta">${d.description || ''}</div>
+      ${swatchMarkup(d.colors)}
+    `;
+
+    // Add motion/ink behavior to match site
+    attachCardInteractions(el);
+
+    // Resolve image
+    const path = d.imagePath || d.image; // support legacy field
+    const media = el.querySelector('.card__media');
+    if (d.imageURL) {
+      media.style.background = `center/cover no-repeat url('${d.imageURL}')`;
+      media.style.border = '1px solid #e7e7e7';
+    } else if (path) {
+      getDownloadURL(ref(storage, path)).then(url => {
+        media.style.background = `center/cover no-repeat url('${url}')`;
+        media.style.border = '1px solid #e7e7e7';
+      }).catch(()=>{});
+    }
+
+    return el;
+  }
+
+  function attachCardInteractions(card){
+    // ink shimmer follow
+    card.addEventListener('mousemove', (e)=>{
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX-rect.left) + 'px');
+      card.style.setProperty('--my', (e.clientY-rect.top) + 'px');
+    }, { passive: true });
+
+    // tilt
+    let rx=0, ry=0; const damp=.12; let raf=null;
+    function onMove(e){
+      const r = card.getBoundingClientRect();
+      const px = ((e.clientX - r.left) / r.width) * 2 - 1;
+      const py = ((e.clientY - r.top) / r.height) * 2 - 1;
+      ry = -px * 6; rx = py * 6; if(!raf) raf=requestAnimationFrame(update);
+    }
+    function onLeave(){ rx=0; ry=0; if(!raf) raf=requestAnimationFrame(update); }
+    function update(){
+      const m = card._rot || {x:0,y:0};
+      m.x += (rx - m.x) * damp; m.y += (ry - m.y) * damp; card._rot = m;
+      card.style.transform = `rotateX(${m.x.toFixed(2)}deg) rotateY(${m.y.toFixed(2)}deg)`;
+      raf = null;
+    }
+    card.addEventListener('mousemove', onMove, { passive: true });
+    card.addEventListener('mouseleave', onLeave);
+
+    // swatch click
+    const tint = { white:'#cfd6e3', yellow:'#d8b24d', rose:'#d28b7b' };
+    const media = card.querySelector('.card__media');
+    card.querySelectorAll('.swatch').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        card.querySelectorAll('.swatch').forEach(b=> b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true');
+        media.style.borderColor = tint[btn.dataset.color] || '#d9dde6';
+      });
+    });
+  }
+
+  async function loadCategory(displayName='ENGAGEMENT RINGS'){
+    grid.innerHTML = '<div class="loader"></div>';
+    const col = collection(db, 'engagement_rings'); // this page is for Engagement Rings
+    const snap = await getDocs(col);
+    const frag = document.createDocumentFragment();
+    snap.forEach(d => frag.appendChild(createCard(d)));
+    grid.innerHTML = '';
+    grid.appendChild(frag);
+  }
+
+  // Load on view
+  loadCategory();
+</script>
+</body>
+</html>

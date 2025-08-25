@@ -130,6 +130,70 @@
     .card__meta { color: #6b7280; font-size: 13px; }
     .price { font-weight: 700; }
 
+    /* Luxury hover-motion for homepage cards */
+    .cards { perspective: 1200px; }
+    .card {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+      will-change: transform, box-shadow;
+    }
+    .card:hover { box-shadow: 0 18px 46px rgba(0,0,0,.14); }
+    .card .ph { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .25s ease; will-change: transform; }
+    .card:hover .ph { transform: translateZ(30px) scale(1.015); }
+    .card .ph::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient( 120px 120px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,0) 60% ),
+                  linear-gradient( 60deg, rgba(176,141,87,.18), rgba(176,141,87,0) 40% );
+      mix-blend-mode: screen;
+      opacity: 0; transition: opacity .25s ease;
+      pointer-events: none;
+    }
+    .card:hover .ph::after { opacity: .6; }
+    @media (prefers-reduced-motion: reduce) {
+      .card, .card .ph { transition: none !important; transform: none !important; }
+      .card .ph::after { display: none; }
+    }
+
+    /* Luxury hover-motion for category tiles */
+    .grid { perspective: 1200px; }
+    .tile {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+      will-change: transform, box-shadow;
+    }
+    .tile:hover { box-shadow: 0 18px 46px rgba(0,0,0,.14); }
+    .tile .tile__media { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .25s ease; will-change: transform; }
+    .tile:hover .tile__media { transform: translateZ(24px) scale(1.01); }
+    .tile .tile__media::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient( 120px 120px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,0) 60% ),
+                  linear-gradient( 60deg, rgba(176,141,87,.18), rgba(176,141,87,0) 40% );
+      mix-blend-mode: screen;
+      opacity: 0; transition: opacity .25s ease; pointer-events: none;
+    }
+    .tile:hover .tile__media::after { opacity: .6; }
+
+    /* Luxury hover-motion for split placeholders */
+    .split { perspective: 1200px; }
+    .split .ph { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .25s ease; will-change: transform; position: relative; overflow: hidden; }
+    .split .ph:hover { transform: translateZ(24px) scale(1.01); }
+    .split .ph::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient( 120px 120px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,0) 60% ),
+                  linear-gradient( 60deg, rgba(176,141,87,.18), rgba(176,141,87,0) 40% );
+      mix-blend-mode: screen; opacity: 0; transition: opacity .25s ease; pointer-events: none;
+    }
+    .split .ph:hover::after { opacity: .6; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tile, .tile .tile__media, .split .ph { transition: none !important; transform: none !important; }
+      .tile .tile__media::after, .split .ph::after { display: none; }
+    }
+
     /* Split CTA */
     .split { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; }
     @media (min-width: 880px) { .split { grid-template-columns: 1.1fr .9fr; } }
@@ -162,7 +226,7 @@
       <div class="brand"><a href="/">Culet Diamonds</a></div>
       <nav class="nav" aria-label="Main">
         <ul class="nav__list">
-          <li><a class="nav__link inkable" href="/engagement-rings.html">Engagement Rings</a></li>
+          <li><a class="nav__link inkable" href="/engagementrings.html">Engagement Rings</a></li>
           <li><a class="nav__link inkable" href="/bracelets.html">Bracelets</a></li>
           <li><a class="nav__link inkable" href="/necklaces.html">Necklaces</a></li>
           <li><a class="nav__link inkable" href="/earrings.html">Earrings</a></li>
@@ -492,6 +556,79 @@
         }
       }, { passive: false });
     })();
+    // Luxury tilt + shimmer follow for all boxes (cards, tiles, split placeholders)
+    (function(){
+      const targets = document.querySelectorAll('.cards .card, .grid .tile, .split .ph');
+      let raf = null;
+
+      function attach(el){
+        let rx = 0, ry = 0, mx = 0, my = 0;
+        const damp = 0.12;
+        function onMove(e){
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const px = (x / rect.width) * 2 - 1;
+          const py = (y / rect.height) * 2 - 1;
+          ry = -px * 6;
+          rx =  py * 6;
+          mx = x; my = y;
+          if(!raf) raf = requestAnimationFrame(update);
+        }
+        function onLeave(){ rx = 0; ry = 0; if(!raf) raf = requestAnimationFrame(update); }
+        function update(){
+          const m = el._rot || {x:0,y:0};
+          m.x += (rx - m.x) * damp;
+          m.y += (ry - m.y) * damp;
+          el._rot = m;
+          el.style.transform = `rotateX(${m.x.toFixed(2)}deg) rotateY(${m.y.toFixed(2)}deg)`;
+          el.style.setProperty('--mx', mx + 'px');
+          el.style.setProperty('--my', my + 'px');
+          raf = null;
+        }
+        el.addEventListener('mousemove', onMove, { passive: true });
+        el.addEventListener('mouseleave', onLeave);
+      }
+
+      targets.forEach(attach);
+    })();
+</script>
+
+  <!-- Firebase (browser module) -->
+  <script type="module">
+    // Load Firebase v10 modules from the official CDN
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js';
+    import { getAnalytics, isSupported as analyticsSupported } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-analytics.js';
+    // If you later need Firestore/Auth/Storage, import similarly, e.g.:
+    // import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
+    // import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js';
+    // import { getStorage } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-storage.js';
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYaGgQ-7GK2vm0nTJ5vjGBLE4LfHT4lOQ",
+      authDomain: "culetdiamonds-18621.firebaseapp.com",
+      projectId: "culetdiamonds-18621",
+      storageBucket: "culetdiamonds-18621.firebasestorage.app",
+      messagingSenderId: "373411619102",
+      appId: "1:373411619102:web:d3689d7bfb2ea620d4690f",
+      measurementId: "G-J3W656N9JE"
+    };
+
+    // Initialize (guard to avoid duplicate inits if this script is ever included twice)
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
+    // Initialize Analytics only in supported browser contexts (skips SSR/errors)
+    try {
+      if (await analyticsSupported()) {
+        getAnalytics(app);
+      }
+    } catch (e) {
+      // No-op: analytics not supported (e.g., in some browsers or when not served over HTTPS)
+    }
+
+    // Expose app globally if you want to access it in other inline scripts
+    window.firebaseApp = app;
   </script>
 </body>
 </html>
