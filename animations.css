@@ -1,5 +1,24 @@
 /* Global animation and loading styles */
 
+/* Sitewide subtle blue → gold gradient background */
+html.site-bg--blue-gold,
+body.site-bg--blue-gold {
+  background:
+    linear-gradient(120deg, rgba(15,46,110,0.10) 0%, rgba(176,141,87,0.10) 100%),
+    radial-gradient(800px 600px at 15% -10%, rgba(176,141,87,0.18), rgba(176,141,87,0) 60%),
+    radial-gradient(900px 700px at 85% 110%, rgba(15,46,110,0.16), rgba(15,46,110,0) 60%),
+    linear-gradient(180deg, #fafafa 0%, #ffffff 40%, #f6f6f6 100%);
+  background-attachment: fixed;
+}
+
+/* Optional dark blue background variant */
+body.site-bg--blue-black {
+  background:
+    radial-gradient(900px 700px at 85% 120%, rgba(15, 46, 110, 0.16), rgba(15, 46, 110, 0) 60%),
+    linear-gradient(180deg, #0b0e16 0%, #0a0a0a 100%);
+  background-attachment: fixed;
+}
+
 /* Placeholder block */
 .ph {
   position: relative;
