@@ -53,6 +53,16 @@
     .table th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#374151}
     .actions{display:flex;gap:8px}
 
+    /* Homepage selector helpers */
+    .grid--two { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 960px){ .grid--two{ grid-template-columns: 1fr; } }
+    .selector-row{ display:flex; gap:10px; align-items:center; }
+    .selector-row label{ min-width: 180px; font-size:13px; font-weight:700; }
+    .best-list{ max-height: 280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+    .best-item{ display:flex; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px dashed #eef2f7; }
+    .best-item:last-child{ border-bottom:none; }
+    .best-item small{ color: var(--muted); }
+
     .hidden{display:none !important}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px;background:#fff}
     .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px}
@@ -72,7 +82,7 @@
     </div>
   </header>
 
-  <div id="debugBar" class="container" style="font-size:12px;color:#4b5563;padding:6px 0;">
+  <div id="debugBar" class="container hidden" style="font-size:12px;color:#4b5563;padding:6px 0;">
     <span>UID: <code id="dbgUid">—</code></span> ·
     <span>Admin: <strong id="dbgIsAdmin">false</strong></span> ·
     <span>Bucket cfg: <code id="dbgBucketCfg">—</code></span> ·
@@ -91,6 +101,29 @@
           <div class="field" style="align-self:flex-end"><button class="btn btn--dark" type="submit">Sign in</button></div>
         </form>
         <p class="muted">Admin access is granted if your UID exists at <code>admins/{uid}</code> in Firestore.</p>
+      </div>
+    </section>
+
+    <section id="homepagePanel" class="panel hidden" aria-live="polite" style="margin-top:16px">
+      <div class="panel__head"><strong>Homepage Selections</strong><span class="badge" id="hpStatus">Idle</span></div>
+      <div class="panel__body">
+        <p class="muted">Choose which items appear on the <strong>index.html</strong> hero/sections and mark your <strong>Best Sellers</strong>. You can pick by title from <em>any</em> category.</p>
+
+        <div class="grid--two" style="margin-top:10px">
+          <div>
+            <h3 style="margin:6px 0 10px">Featured by Section</h3>
+            <div id="featureSelectors" style="display:flex; flex-direction:column; gap:10px"></div>
+          </div>
+          <div>
+            <h3 style="margin:6px 0 10px">Best Sellers</h3>
+            <div id="bestSellersList" class="best-list" aria-label="Best sellers list"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px">
+          <button id="saveHomepageBtn" class="btn btn--dark" type="button">Save Homepage Config</button>
+          <button id="reloadHomepageBtn" class="btn" type="button">Reload</button>
+        </div>
       </div>
     </section>
 
@@ -266,7 +299,8 @@
       'EARRINGS': 'earrings',
       'RINGS': 'rings',
       'DIAMONDS': 'diamonds',
-      'ESTATE JEWELRY': 'estate_jewelry'
+      'ESTATE JEWELRY': 'estate_jewelry',
+      'JEWELRY PROGRAM': 'jewelry_program'
     };
     const listCategorySel = document.getElementById('listCategory');
     const listTitleEl = document.getElementById('listTitle');
@@ -314,6 +348,8 @@
         dash.classList.remove('hidden');
         signOutBtn.classList.remove('hidden');
         loadRings();
+        showHomepagePanel();
+        loadHomepageConfig();
       }else{
         authGate.classList.add('hidden');
         dash.classList.add('hidden');
@@ -389,7 +425,6 @@ renderBadges();
       const collectionId = getCollectionId(category);
       const shopifyVariantId = $('#shopifyVariantId').value.trim() || null;
       const shopifyCheckoutUrl = $('#shopifyCheckoutUrl').value.trim() || null;
-      const file = $('#image').files?.[0] || null;
 
       if(!title || !description){ alert('Title and description are required.'); return; }
 
@@ -403,7 +438,7 @@ renderBadges();
           await setDoc(ringRef, {
             title, description, category, collectionId,
             shopifyVariantId, shopifyCheckoutUrl,
-            imagePath: $('#image').dataset.prevPath || null,
+            imagePath: null,
             imageURL: null,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -421,7 +456,6 @@ renderBadges();
         }
         createdDocId = ringRef.id;
 
-        // 2) Upload image (if provided) to rings/{docId}/{safeName}
         // 2) Upload images per color
 const imagesByColor = {};
 for (const [color, f] of colorFiles.entries()){
@@ -463,7 +497,6 @@ if (!imagePath){
 existingColorPaths.clear();
 renderBadges();
         thumb.style.backgroundImage = '';
-        $('#image').dataset.prevPath='';
         $('#docId').value='';
         await loadRings();
       } catch (err) {
@@ -478,7 +511,6 @@ renderBadges();
 
 resetBtn.addEventListener('click', ()=>{
   thumb.style.backgroundImage='';
-  $('#image').dataset.prevPath='';
   $('#docId').value='';
   // clear per‑color state
   colorFiles.clear();
@@ -566,6 +598,146 @@ resetBtn.addEventListener('click', ()=>{
     if (listCategorySel) {
       listCategorySel.addEventListener('change', ()=> loadRings());
     }
+
+    // ===== Homepage selections =====
+    const homepagePanel = document.getElementById('homepagePanel');
+    const featureSelectors = document.getElementById('featureSelectors');
+    const bestSellersList = document.getElementById('bestSellersList');
+    const saveHomepageBtn = document.getElementById('saveHomepageBtn');
+    const reloadHomepageBtn = document.getElementById('reloadHomepageBtn');
+    const hpStatus = document.getElementById('hpStatus');
+
+    // Build a flat catalog of all items across collections
+    async function fetchAllCatalog(){
+      const result = []; // { id, title, collectionId, display }
+      for (const [display, colId] of Object.entries(CATEGORY_MAP)){
+        try{
+          const snap = await getDocs(collection(db, colId));
+          snap.forEach(docu=>{
+            const d = docu.data();
+            result.push({ id: docu.id, title: d.title || '(untitled)', collectionId: colId, display });
+          });
+        }catch(e){ console.warn('Failed to load', colId, e); }
+      }
+      // Sort by display, then title
+      result.sort((a,b)=> a.display.localeCompare(b.display) || a.title.localeCompare(b.title));
+      return result;
+    }
+
+    function optionLabel(item){
+      return `${item.title} — ${item.display}`;
+    }
+
+    function packValue(item){
+      return `${item.collectionId}::${item.id}`; // easy to parse
+    }
+
+    function unpackValue(v){
+      const [collectionId, id] = String(v||'').split('::');
+      return { collectionId, id };
+    }
+
+    function buildFeatureSelectors(all){
+      featureSelectors.innerHTML = '';
+      const sections = [
+        'ENGAGEMENT RINGS','BRACELETS','NECKLACES','EARRINGS','RINGS','DIAMONDS','ESTATE JEWELRY','JEWELRY PROGRAM'
+      ];
+      sections.forEach(sec=>{
+        const row = document.createElement('div'); row.className = 'selector-row';
+        const id = `hp_${CATEGORY_MAP[sec]}`;
+        row.innerHTML = `<label for="${id}">${sec}</label><select id="${id}"><option value="">— None —</option></select>`;
+        featureSelectors.appendChild(row);
+        const select = document.getElementById(id);
+        all.forEach(item=>{
+          const opt = document.createElement('option');
+          opt.value = packValue(item);
+          opt.textContent = optionLabel(item);
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    function buildBestSellerList(all){
+      bestSellersList.innerHTML = '';
+      all.forEach(item=>{
+        const id = `bs_${item.collectionId}__${item.id}`;
+        const div = document.createElement('div'); div.className = 'best-item';
+        div.innerHTML = `<label style="display:flex; align-items:center; gap:10px">
+            <input type="checkbox" value="${packValue(item)}" id="${id}">
+            <span>${item.title} <small>— ${item.display}</small></span>
+        </label>`;
+        bestSellersList.appendChild(div);
+      });
+    }
+
+    async function loadHomepageConfig(){
+      hpStatus.textContent = 'Loading…';
+      const all = await fetchAllCatalog();
+      buildFeatureSelectors(all);
+      buildBestSellerList(all);
+      // Load existing config
+      try{
+        const snap = await getDoc(doc(db, 'config', 'homepage'));
+        if(snap.exists()){
+          const cfg = snap.data();
+          // featured selections
+          const sections = [
+            'ENGAGEMENT RINGS','BRACELETS','NECKLACES','EARRINGS','RINGS','DIAMONDS','ESTATE JEWELRY','JEWELRY PROGRAM'
+          ];
+          sections.forEach(sec=>{
+            const sel = document.getElementById(`hp_${CATEGORY_MAP[sec]}`);
+            const entry = cfg?.featured?.[sec];
+            if (sel && entry){ sel.value = packValue(entry); }
+          });
+          // best sellers
+          const chosen = Array.isArray(cfg?.bestSellers) ? cfg.bestSellers : [];
+          const set = new Set(chosen.map(packValue));
+          bestSellersList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{ cb.checked = set.has(cb.value); });
+        }
+      }catch(e){ console.warn('homepage config load failed', e); }
+      hpStatus.textContent = 'Idle';
+    }
+
+    async function saveHomepageConfig(){
+      hpStatus.textContent = 'Saving…';
+      const featured = {};
+      const sections = [
+        'ENGAGEMENT RINGS','BRACELETS','NECKLACES','EARRINGS','RINGS','DIAMONDS','ESTATE JEWELRY','JEWELRY PROGRAM'
+      ];
+      sections.forEach(sec=>{
+        const sel = document.getElementById(`hp_${CATEGORY_MAP[sec]}`);
+        const val = sel?.value || '';
+        if (val){
+          const { collectionId, id } = unpackValue(val);
+          const title = sel.options[sel.selectedIndex]?.textContent?.split(' — ')[0] || '';
+          featured[sec] = { collectionId, id, title };
+        }
+      });
+      const bestSellers = [];
+      bestSellersList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb=>{
+        const { collectionId, id } = unpackValue(cb.value);
+        const text = cb.parentElement?.querySelector('span')?.textContent || '';
+        const title = text.split(' — ')[0];
+        const display = text.split(' — ')[1] || '';
+        bestSellers.push({ collectionId, id, title, display });
+      });
+      try{
+        await setDoc(doc(db, 'config', 'homepage'), { featured, bestSellers, updatedAt: serverTimestamp() }, { merge: true });
+        hpStatus.textContent = 'Saved';
+      }catch(e){
+        console.error('homepage save failed', e);
+        hpStatus.textContent = 'Error';
+        alert('Save failed: ' + (e?.message || e));
+      }finally{
+        setTimeout(()=> hpStatus.textContent = 'Idle', 1200);
+      }
+    }
+
+    // Show homepage panel only for admins alongside dash
+    function showHomepagePanel(){ homepagePanel.classList.remove('hidden'); }
+
+    saveHomepageBtn?.addEventListener('click', saveHomepageConfig);
+    reloadHomepageBtn?.addEventListener('click', loadHomepageConfig);
   </script>
 </body>
 </html>

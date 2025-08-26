@@ -18,9 +18,10 @@
       --border: #e7e7e7;
       --radius: 12px;
       --shadow: 0 10px 30px rgba(0,0,0,.06);
-      --max-w: 1200px;
+      --max-w: 1320px;
       --pad: clamp(14px, 2vw, 24px);
     }
+
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
     body { font-family: Manrope, system-ui, sans-serif; line-height: 1.6; }
@@ -52,32 +53,42 @@
     /* Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 300px));
-      gap: 24px;
+      grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4-up on desktop */
+      gap: 20px;
       padding: clamp(18px, 3vw, 28px) 0;
-      justify-content: center; /* center the whole grid block */
-      justify-items: center;   /* center items inside their tracks */
-      perspective: 1200px;     /* keep the existing 3D context */
+      justify-items: stretch;   
+      perspective: 1200px;      
     }
-    @media (max-width: 1100px) { .grid { justify-content: center; } }
-    @media (max-width: 760px)  { .grid { justify-content: center; } }
+    @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 900px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px)  { .grid { grid-template-columns: 1fr; } }
 
     /* Card */
     .card {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px;
+      padding: 16px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       gap: 10px;
       width: 100%;
-      max-width: 300px; /* fixed column width to enable true centering */
+      height: 100%;
+      justify-content: space-between;
     }
     .card__media { border-radius: var(--radius); border: 1px dashed #d9dde6; aspect-ratio: 1 / 1; background: repeating-linear-gradient(45deg, #f3f5fa, #f3f5fa 10px, #edf0f7 10px, #edf0f7 20px); position: relative; overflow: hidden; }
-    .card__title { font-weight: 700; }
+    .card__title {
+      font-family: "Cormorant Garamond", serif;
+      font-weight: 600;
+      font-size: clamp(18px, 1.9vw, 22px);
+      letter-spacing: .01em;
+      color: #0b1d49;
+      line-height: 1.25;
+    }
     .card__meta { color: #6b7280; font-size: 13px; }
+    .card__body { flex-grow: 1; }
+    .card__footer { margin-top: auto; }
     .price { font-weight: 700; }
 
     /* Loader animation */
@@ -136,7 +147,7 @@
 
     /* Swatches */
     .swatches { display: flex; gap: 8px; align-items: center; }
-    .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; outline: 1px solid #d1d5db; cursor: pointer; position: relative; }
+    .swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; outline: 1px solid #d1d5db; cursor: pointer; position: relative; }
     .swatch[aria-pressed="true"] { outline-color: var(--accent-ink); box-shadow: 0 0 0 2px rgba(15,46,110,.15); }
     .swatch--white { background: linear-gradient(135deg, #eef2f7, #cfd6e3); }
     .swatch--yellow { background: linear-gradient(135deg, #f0d481, #d8b24d); }
@@ -195,7 +206,6 @@
     <div class="container" style="padding:20px 0; font-size:13px;">© <span id="year"></span> Culet Diamonds.</div>
   </footer>
 
-  
   <script>
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -326,18 +336,26 @@
 
   const grid = document.getElementById('ringGrid');
 
-  function swatchMarkup(colors = ['white','yellow','rose']){
-    const colorSet = Array.from(new Set(colors));
-    const map = {
-      white: 'swatch swatch--white',
-      yellow: 'swatch swatch--yellow',
-      rose: 'swatch swatch--rose'
-    };
+  function swatchMarkupFromDoc(d){
+    const available = d && d.imagesByColor ? Object.keys(d.imagesByColor) : [];
+    const order = ['white','yellow','rose'];
+    const colors = available.length ? order.filter(c=>available.includes(c)).concat(available.filter(c=>!order.includes(c))) : [];
+    const map = { white:'swatch swatch--white', yellow:'swatch swatch--yellow', rose:'swatch swatch--rose' };
+    if (!colors.length) return '';
     return `
       <div class="swatches" role="group" aria-label="Choose metal color">
-        ${colorSet.map((c,i)=>`<button class="${map[c]||'swatch'}" aria-pressed="${i===0?'true':'false'}" title="${(c||'').replace(/^\w/,m=>m.toUpperCase())} Gold" data-color="${c}"></button>`).join('')}
+        ${colors.map((c,i)=>`<button class="${map[c]||'swatch'}" aria-pressed="${i===0?'true':'false'}" title="${(c||'').replace(/^\w/,m=>m.toUpperCase())} Gold" data-color="${c}"></button>`).join('')}
       </div>
     `;
+  }
+
+  async function resolveColorImage(d, color){
+    if (!d || !d.imagesByColor) return null;
+    const entry = d.imagesByColor[color];
+    if (!entry) return null;
+    if (entry.url) return entry.url;
+    if (entry.path) { try { return await getDownloadURL(ref(storage, entry.path)); } catch { return null; } }
+    return null;
   }
 
   function createCard(doc){
@@ -346,28 +364,38 @@
     el.className = 'card';
     el.setAttribute('data-id', doc.id);
 
+    // Cache the raw doc data for swatch interactions
+    el.__docData = d;
+
     el.innerHTML = `
       <div class="card__media" aria-label="${d.title||'Ring'} image"></div>
-      <div class="card__title">${d.title || ''}</div>
-      <div class="card__meta">${d.description || ''}</div>
-      ${swatchMarkup(d.colors)}
+      <div class="card__body">
+        <div class="card__title">${d.title || ''}</div>
+        <div class="card__meta">${d.description || ''}</div>
+      </div>
+      <div class="card__footer">
+        ${swatchMarkupFromDoc(d)}
+      </div>
     `;
 
     // Add motion/ink behavior to match site
     attachCardInteractions(el);
 
-    // Resolve image
-    const path = d.imagePath || d.image; // support legacy field
+    // Resolve image (prefer imagesByColor by priority: white > yellow > rose > any)
     const media = el.querySelector('.card__media');
-    if (d.imageURL) {
-      media.style.background = `center/cover no-repeat url('${d.imageURL}')`;
-      media.style.border = '1px solid #e7e7e7';
-    } else if (path) {
-      getDownloadURL(ref(storage, path)).then(url => {
-        media.style.background = `center/cover no-repeat url('${url}')`;
-        media.style.border = '1px solid #e7e7e7';
-      }).catch(()=>{});
-    }
+    (async () => {
+      let url = null;
+      const order = ['white','yellow','rose'];
+      if (d.imagesByColor && Object.keys(d.imagesByColor).length){
+        for (const c of order){ url = await resolveColorImage(d, c); if (url) break; }
+        if (!url){
+          for (const key of Object.keys(d.imagesByColor)){ url = await resolveColorImage(d, key); if (url) break; }
+        }
+      }
+      if (!url && d.imageURL) url = d.imageURL;
+      if (!url && d.imagePath) { try { url = await getDownloadURL(ref(storage, d.imagePath)); } catch {} }
+      if (url){ media.style.background = `center/cover no-repeat url('${url}')`; media.style.border = '1px solid #e7e7e7'; }
+    })();
 
     return el;
   }
@@ -398,14 +426,23 @@
     card.addEventListener('mousemove', onMove, { passive: true });
     card.addEventListener('mouseleave', onLeave);
 
-    // swatch click
+    // Attach swatch behavior with image swap
     const tint = { white:'#cfd6e3', yellow:'#d8b24d', rose:'#d28b7b' };
     const media = card.querySelector('.card__media');
+    const id = card.getAttribute('data-id');
     card.querySelectorAll('.swatch').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
+      btn.addEventListener('click', async ()=>{
         card.querySelectorAll('.swatch').forEach(b=> b.setAttribute('aria-pressed','false'));
         btn.setAttribute('aria-pressed','true');
         media.style.borderColor = tint[btn.dataset.color] || '#d9dde6';
+        try {
+          // Look up the doc data from a cache on the element if available
+          const d = card.__docData;
+          if (d){
+            const url = await resolveColorImage(d, btn.dataset.color);
+            if (url) media.style.background = `center/cover no-repeat url('${url}')`;
+          }
+        } catch {}
       });
     });
   }
