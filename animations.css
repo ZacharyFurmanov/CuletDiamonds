@@ -1,0 +1,83 @@
+/* Global animation and loading styles */
+
+/* Placeholder block */
+.ph {
+  position: relative;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 10px, #ececec 10px, #ececec 20px);
+  box-shadow: var(--shadow);
+}
+.ph--empty { background: transparent !important; border-style: dashed; }
+.ph--landscape { aspect-ratio: 16/9; }
+.ph--portrait { aspect-ratio: 3/4; }
+.ph--square { aspect-ratio: 1/1; }
+
+/* Media fades in when loaded */
+.card__img, .tile__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+}
+.ph.is-loaded .card__img, .tile__media.is-loaded .tile__img { opacity: 1; }
+
+/* Skeleton shimmer loader */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #f3f3f3;
+  border-radius: var(--radius);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  height: 100%;
+  width: 150px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Gold shimmer bar loader for image rectangles */
+.ph.skeleton, .tile__media.skeleton {
+  position: relative;
+  background: #f3f3f3;
+  overflow: hidden;
+}
+.ph.skeleton::after, .tile__media.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -60%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, rgba(176,141,87,0.08) 0%, rgba(176,141,87,0.32) 50%, rgba(176,141,87,0.08) 100%);
+  animation: shimmer-bar-gold 1.3s infinite;
+  border-radius: inherit;
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes shimmer-bar-gold {
+  100% { left: 100%; }
+}
+
+/* Generic golden shimmer for Firebase loading */
+.firebase-loading {
+  position: relative;
+  overflow: hidden;
+}
+.firebase-loading::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -60%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, rgba(176,141,87,0.08) 0%, rgba(176,141,87,0.32) 50%, rgba(176,141,87,0.08) 100%);
+  animation: shimmer-bar-gold 1.3s infinite;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
