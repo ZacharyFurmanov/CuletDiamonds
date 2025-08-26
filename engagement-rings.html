@@ -50,6 +50,13 @@
     /* Page head */
     .banner { background: #ffffff; padding: clamp(24px, 5vw, 64px) 0; text-align: center; }
     .banner h1 { margin: 0; font-size: clamp(28px, 5vw, 48px); text-align: center; }
+    .banner .banner__desc {
+      margin: 10px auto 0;
+      color: var(--muted);
+      font-size: clamp(14px, 1.6vw, 16px);
+      line-height: 1.7;
+      max-width: 60ch;
+    }
 
     /* Grid */
     .grid {
@@ -171,6 +178,7 @@
   <section class="banner">
     <div class="container">
       <h1 style="margin:0">Engagement Rings</h1>
+      <p class="banner__desc">Hand-finished settings, ethically sourced stones, and timeless design. Explore classic solitaires, modern halos, and bespoke styles crafted to last a lifetime.</p>
     </div>
   </section>
 
@@ -424,15 +432,29 @@
     const id = card.getAttribute('data-id');
     card.querySelectorAll('.swatch').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
+        // toggle pressed state
         card.querySelectorAll('.swatch').forEach(b=> b.setAttribute('aria-pressed','false'));
         btn.setAttribute('aria-pressed','true');
+        // update media border tint
         media.style.borderColor = tint[btn.dataset.color] || '#d9dde6';
+        // fetch correct image for selected color and swap the <img> src with shimmer
         try {
-          // Look up the doc data from a cache on the element if available
           const d = card.__docData;
-          if (d){
+          const imgEl = media.querySelector('.card__img');
+          if (d && imgEl){
             const url = await resolveColorImage(d, btn.dataset.color);
-            if (url) media.style.background = `center/cover no-repeat url('${url}')`;
+            if (url){
+              // show shimmer until the new image finishes loading
+              media.classList.add('skeleton','firebase-loading');
+              media.classList.remove('is-loaded','ph--empty');
+              const onLoad = ()=>{
+                media.classList.add('is-loaded');
+                media.classList.remove('skeleton','firebase-loading');
+                imgEl.removeEventListener('load', onLoad);
+              };
+              imgEl.addEventListener('load', onLoad, { once: true });
+              imgEl.src = url;
+            }
           }
         } catch {}
       });
