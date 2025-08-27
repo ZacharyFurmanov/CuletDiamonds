@@ -48,6 +48,7 @@
     .row .field{flex:1}
     .filebox{border:1px dashed #cbd5e1;padding:14px;border-radius:10px;background:#fff}
     .thumb{width:100%;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--border);background:#f3f4f6 center/cover no-repeat}
+    .thumb--sm{width:120px}
 
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
@@ -125,6 +126,29 @@
           <button id="saveHomepageBtn" class="btn btn--dark" type="button">Save Homepage Config</button>
           <button id="reloadHomepageBtn" class="btn" type="button">Reload</button>
         </div>
+      </div>
+    </section>
+
+    <section id="siteImagesPanel" class="panel hidden" aria-live="polite" style="margin-top:16px">
+      <div class="panel__head"><strong>Homepage Images</strong><span class="badge" id="imgStatus">Idle</span></div>
+      <div class="panel__body">
+        <p class="muted">Upload standalone images used on the homepage.</p>
+        <form id="siteImagesForm" class="row" style="flex-wrap:wrap;align-items:flex-start">
+          <div class="field" style="max-width:220px">
+            <label for="titleImage">Title Image</label>
+            <input id="titleImage" type="file" accept="image/*">
+            <div id="titleThumb" class="thumb thumb--sm" style="margin-top:8px"></div>
+          </div>
+          <div class="field" style="max-width:220px">
+            <label for="aboutImage">About Us Image</label>
+            <input id="aboutImage" type="file" accept="image/*">
+            <div id="aboutThumb" class="thumb thumb--sm" style="margin-top:8px"></div>
+          </div>
+          <div class="field" style="flex-basis:100%;display:flex;gap:10px;margin-top:6px">
+            <button id="saveSiteImagesBtn" class="btn btn--dark" type="submit">Save Images</button>
+            <button id="reloadSiteImagesBtn" class="btn" type="button">Reload</button>
+          </div>
+        </form>
       </div>
     </section>
 
@@ -351,6 +375,8 @@
         loadRings();
         showHomepagePanel();
         loadHomepageConfig();
+        showSiteImagesPanel();
+        loadSiteImages();
       }else{
         authGate.classList.add('hidden');
         dash.classList.add('hidden');
@@ -608,6 +634,15 @@ resetBtn.addEventListener('click', ()=>{
     const reloadHomepageBtn = document.getElementById('reloadHomepageBtn');
     const hpStatus = document.getElementById('hpStatus');
 
+    const siteImagesPanel = document.getElementById('siteImagesPanel');
+    const titleImageInput = document.getElementById('titleImage');
+    const aboutImageInput = document.getElementById('aboutImage');
+    const titleThumb = document.getElementById('titleThumb');
+    const aboutThumb = document.getElementById('aboutThumb');
+    const saveSiteImagesBtn = document.getElementById('saveSiteImagesBtn');
+    const reloadSiteImagesBtn = document.getElementById('reloadSiteImagesBtn');
+    const imgStatus = document.getElementById('imgStatus');
+
     // Build a flat catalog of all items across collections
     async function fetchAllCatalog(){
       const result = []; // { id, title, collectionId, display }
@@ -734,11 +769,63 @@ resetBtn.addEventListener('click', ()=>{
       }
     }
 
+    async function loadSiteImages(){
+      imgStatus.textContent = 'Loading…';
+      try{
+        const snap = await getDoc(doc(db, 'config', 'site_images'));
+        if(snap.exists()){
+          const data = snap.data();
+          await resolveStorageBackground(titleThumb, data?.title?.path);
+          await resolveStorageBackground(aboutThumb, data?.about?.path);
+        }else{
+          titleThumb.style.backgroundImage = '';
+          aboutThumb.style.backgroundImage = '';
+        }
+      }catch(e){ console.warn('site images load failed', e); }
+      imgStatus.textContent = 'Idle';
+    }
+
+    async function saveSiteImages(e){
+      e.preventDefault();
+      imgStatus.textContent = 'Saving…';
+      const updates = {};
+      const pairs = [
+        ['title', titleImageInput.files[0]],
+        ['about', aboutImageInput.files[0]]
+      ];
+      try{
+        for(const [key, file] of pairs){
+          if(!file) continue;
+          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+          const path = `site_images/${key}/${safe}`;
+          const storageRef = ref(storage, path);
+          await uploadBytesResumable(storageRef, file, { contentType: file.type });
+          const url = await getDownloadURL(storageRef);
+          updates[key] = { path, url };
+        }
+        if(Object.keys(updates).length){
+          await setDoc(doc(db, 'config', 'site_images'), updates, { merge:true });
+        }
+        imgStatus.textContent = 'Saved';
+        await loadSiteImages();
+      }catch(e){
+        console.error('site images save failed', e);
+        imgStatus.textContent = 'Error';
+        alert('Save failed: ' + (e?.message || e));
+      }finally{
+        setTimeout(()=> imgStatus.textContent = 'Idle', 1200);
+      }
+    }
+
+    function showSiteImagesPanel(){ siteImagesPanel.classList.remove('hidden'); }
+
     // Show homepage panel only for admins alongside dash
     function showHomepagePanel(){ homepagePanel.classList.remove('hidden'); }
 
     saveHomepageBtn?.addEventListener('click', saveHomepageConfig);
     reloadHomepageBtn?.addEventListener('click', loadHomepageConfig);
+    saveSiteImagesBtn?.addEventListener('click', saveSiteImages);
+    reloadSiteImagesBtn?.addEventListener('click', loadSiteImages);
   </script>
 </body>
 </html>
