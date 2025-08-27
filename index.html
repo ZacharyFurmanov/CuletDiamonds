@@ -437,7 +437,7 @@
     }
     @media (max-width: 1200px) { #bestGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 900px)  { #bestGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 560px)  { #bestGrid { grid-template-columns: 1fr; } }
+    @media (max-width: 560px)  { #bestGrid { grid-template-columns: repeat(auto-fit, minmax(240px, 280px)); } }
 
     /* Center and slightly shrink the Best Sellers CTA */
     #bestGrid .card > .btn:last-child { align-self: center; }
