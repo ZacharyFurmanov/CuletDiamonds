@@ -48,6 +48,7 @@
     .row .field{flex:1}
     .filebox{border:1px dashed #cbd5e1;padding:14px;border-radius:10px;background:#fff}
     .thumb{width:100%;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--border);background:#f3f4f6 center/cover no-repeat}
+    .thumb--sm{width:120px}
 
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
@@ -132,6 +133,18 @@
       <div class="panel__head"><strong>Homepage Images</strong><span class="badge" id="imgStatus">Idle</span></div>
       <div class="panel__body">
         <p class="muted">Upload standalone images used on the homepage.</p>
+        <form id="siteImagesForm" class="row" style="flex-wrap:wrap;align-items:flex-start">
+          <div class="field" style="max-width:220px">
+            <label for="titleImage">Title Image</label>
+            <input id="titleImage" type="file" accept="image/*">
+            <div id="titleThumb" class="thumb thumb--sm" style="margin-top:8px"></div>
+          </div>
+          <div class="field" style="max-width:220px">
+            <label for="aboutImage">About Us Image</label>
+            <input id="aboutImage" type="file" accept="image/*">
+            <div id="aboutThumb" class="thumb thumb--sm" style="margin-top:8px"></div>
+          </div>
+          <div class="field" style="flex-basis:100%;display:flex;gap:10px;margin-top:6px">
         <form id="siteImagesForm">
           <div class="field">
             <label for="titleImage">Title Image</label>
