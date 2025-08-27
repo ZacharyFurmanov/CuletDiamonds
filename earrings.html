@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Engagement Rings — Culet Diamonds</title>
+  <title>Earrings — Culet Diamonds</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -224,10 +224,10 @@
       <div class="brand"><a href="index.html">Culet Diamonds</a></div>
       <nav class="nav" aria-label="Main">
         <ul class="nav__list">
-          <li><a class="nav__link inkable" href="engagement-rings.html" aria-current="page">Engagement Rings</a></li>
+          <li><a class="nav__link inkable" href="engagement-rings.html">Engagement Rings</a></li>
           <li><a class="nav__link inkable" href="bracelets.html">Bracelets</a></li>
           <li><a class="nav__link inkable" href="necklaces.html">Necklaces</a></li>
-          <li><a class="nav__link inkable" href="earrings.html">Earrings</a></li>
+          <li><a class="nav__link inkable" href="earrings.html" aria-current="page">Earrings</a></li>
           <li><a class="nav__link inkable" href="rings.html">Rings</a></li>
           <li><a class="nav__link inkable" href="diamonds.html">Diamonds</a></li>
           <li><a class="nav__link inkable" href="estate-jewelry.html">Estate Jewelry</a></li>
@@ -249,10 +249,10 @@
       <button class="icon-btn" id="close-drawer" aria-label="Close menu">Close</button>
     </header>
     <nav class="mobile-nav" aria-label="Mobile Main">
-      <a href="engagement-rings.html" aria-current="page">Engagement Rings</a>
+      <a href="engagement-rings.html">Engagement Rings</a>
       <a href="bracelets.html">Bracelets</a>
       <a href="necklaces.html">Necklaces</a>
-      <a href="earrings.html">Earrings</a>
+      <a href="earrings.html" aria-current="page">Earrings</a>
       <a href="rings.html">Rings</a>
       <a href="diamonds.html">Diamonds</a>
       <a href="estate-jewelry.html">Estate Jewelry</a>
@@ -266,14 +266,14 @@
   <!-- Banner -->
   <section class="banner">
     <div class="container">
-      <h1 style="margin:0">Engagement Rings</h1>
-      <p class="banner__desc">Hand-finished settings, ethically sourced stones, and timeless design. Explore classic solitaires, modern halos, and bespoke styles crafted to last a lifetime.</p>
+      <h1 style="margin:0">Earrings</h1>
+      <p class="banner__desc">Explore earrings for every style, from subtle studs to statement pieces.</p>
     </div>
   </section>
 
   <!-- Grid of rings -->
   <main class="container" role="main">
-    <section aria-label="Ring grid">
+    <section aria-label="Earring grid">
       <!-- Dynamic grid populated from Firestore -->
       <div id="ringGrid" class="grid" aria-live="polite"></div>
     </section>
@@ -571,10 +571,10 @@
     });
   }
 
-  async function loadCategory(displayName='ENGAGEMENT RINGS'){
+  async function loadCategory(displayName='EARRINGS'){
     grid.innerHTML = Array.from({ length: 8 }).map(() => `
       <article class="card">
-        <div class="card__media ph ph--square skeleton firebase-loading ph--empty"><img class="card__img" alt="Loading ring" loading="lazy" decoding="async"></div>
+        <div class="card__media ph ph--square skeleton firebase-loading ph--empty"><img class="card__img" alt="Loading earring" loading="lazy" decoding="async"></div>
         <div class="card__body">
           <div class="card__title skeleton" style="height:16px; width:70%; border-radius:4px"></div>
           <div class="card__meta skeleton" style="height:12px; width:40%; border-radius:4px"></div>
@@ -584,7 +584,7 @@
         </div>
       </article>
     `).join('');
-    const col = collection(db, 'engagement_rings'); // this page is for Engagement Rings
+    const col = collection(db, 'earrings'); // this page is for Earrings
     const snap = await getDocs(col);
     const frag = document.createDocumentFragment();
     snap.forEach(d => frag.appendChild(createCard(d)));
