@@ -982,6 +982,7 @@
       const indicator = document.querySelector('.nav__indicator');
       const links = document.querySelectorAll('.nav__link');
       if (!nav || !indicator || !links.length) return;
+      nav.scrollLeft = 0;
 
       function moveIndicator(el) {
         const navRect = nav.getBoundingClientRect();
