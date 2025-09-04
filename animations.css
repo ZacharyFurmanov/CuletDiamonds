@@ -39,10 +39,13 @@ body.site-bg--blue-black {
   object-fit: cover;
   display: block;
   opacity: 0;
+  transition: opacity .28s ease-in-out;
 }
+.card__img:not([src]), .tile__img:not([src]) { visibility: hidden; }
 .ph.is-loaded .card__img, .tile__media.is-loaded .tile__img { opacity: 1; }
 
 /* Skeleton shimmer loader */
+/* Base skeleton placeholder with neutral shimmer (for text blocks, pills) */
 .skeleton {
   position: relative;
   overflow: hidden;
@@ -53,14 +56,16 @@ body.site-bg--blue-black {
   content: "";
   position: absolute;
   top: 0;
-  left: -150px;
+  left: -60%;
   height: 100%;
-  width: 150px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
-  animation: shimmer 1.5s infinite;
+  width: 60%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.65) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer-slide 1.25s infinite;
+  will-change: transform, left;
+  pointer-events: none;
 }
-@keyframes shimmer {
-  100% { transform: translateX(100%); }
+@keyframes shimmer-slide {
+  100% { left: 100%; }
 }
 
 /* Gold shimmer bar loader for image rectangles */
@@ -79,7 +84,10 @@ body.site-bg--blue-black {
   border-radius: inherit;
   z-index: 2;
   pointer-events: none;
+  will-change: transform, left;
 }
+/* Ensure visibility when using explicit empty placeholder */
+.ph.ph--empty.skeleton { background: #f7f7f8 !important; }
 @keyframes shimmer-bar-gold {
   100% { left: 100%; }
 }
@@ -100,3 +108,21 @@ body.site-bg--blue-black {
   pointer-events: none;
 }
 
+/* Safety: if a node is both loaded and still has skeleton class, hide the overlay */
+.is-loaded.skeleton::after { content: none; }
+
+/* Base media shells for tiles to ensure consistent clipping if page CSS omits it */
+.tile__media, .ph {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .ph.skeleton::after,
+  .tile__media.skeleton::after,
+  .firebase-loading::after {
+    animation: none !important;
+  }
+}
