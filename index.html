@@ -9,6 +9,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="animations.css">
   <style>
     :root {
@@ -1040,42 +1041,7 @@
         }
       }, { passive: false });
     })();
-    // Luxury tilt + shimmer follow for all boxes (cards, tiles, split placeholders)
-    (function () {
-      const targets = document.querySelectorAll('.cards .card, .grid .tile, .split .ph');
-      let raf = null;
-
-      function attach(el) {
-        let rx = 0, ry = 0, mx = 0, my = 0;
-        const damp = 0.12;
-        function onMove(e) {
-          const rect = el.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const px = (x / rect.width) * 2 - 1;
-          const py = (y / rect.height) * 2 - 1;
-          ry = -px * 6;
-          rx = py * 6;
-          mx = x; my = y;
-          if (!raf) raf = requestAnimationFrame(update);
-        }
-        function onLeave() { rx = 0; ry = 0; if (!raf) raf = requestAnimationFrame(update); }
-        function update() {
-          const m = el._rot || { x: 0, y: 0 };
-          m.x += (rx - m.x) * damp;
-          m.y += (ry - m.y) * damp;
-          el._rot = m;
-          el.style.transform = `rotateX(${m.x.toFixed(2)}deg) rotateY(${m.y.toFixed(2)}deg)`;
-          el.style.setProperty('--mx', mx + 'px');
-          el.style.setProperty('--my', my + 'px');
-          raf = null;
-        }
-        el.addEventListener('mousemove', onMove, { passive: true });
-        el.addEventListener('mouseleave', onLeave);
-      }
-
-      targets.forEach(attach);
-    })();
+    // Minimalist: removed 3D tilt for a calmer UI
   </script>
 
   <!-- Firebase (browser module) -->

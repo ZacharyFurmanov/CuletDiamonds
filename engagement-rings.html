@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="animations.css">
   <style>
     :root {
@@ -279,9 +280,9 @@
     </section>
   </main>
 
-  <!-- Footer (light) -->
-  <footer class="footer" role="contentinfo" style="border-top:1px solid var(--border); background:#111; color:#e5e7eb;">
-    <div class="container" style="padding:20px 0; font-size:13px;">© <span id="year"></span> Culet Diamonds.</div>
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer__bar">© <span id="year"></span> Culet Diamonds.</div>
   </footer>
 
   <script>
@@ -367,53 +368,7 @@
       });
     })();
 
-    // Luxury card tilt + shimmer follow
-    (function(){
-      const cards = document.querySelectorAll('.card');
-      let raf = null;
-
-      function attach(card){
-        let rx = 0, ry = 0; // target rotations
-        let mx = 0, my = 0; // mouse within card
-        const damp = 0.12;  // easing
-
-        function onMove(e){
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const px = (x / rect.width) * 2 - 1;   // -1..1
-          const py = (y / rect.height) * 2 - 1;  // -1..1
-          // rotation limits
-          ry = -px * 6; // Y rotates opposite to mouse X
-          rx =  py * 6; // X rotates with mouse Y
-          mx = x; my = y;
-          if (!raf) raf = requestAnimationFrame(update);
-        }
-
-        function onLeave(){
-          rx = 0; ry = 0;
-          if (!raf) raf = requestAnimationFrame(update);
-        }
-
-        function update(){
-          // read existing transform to ease toward target
-          const m = card._rot || {x:0,y:0};
-          m.x += (rx - m.x) * damp;
-          m.y += (ry - m.y) * damp;
-          card._rot = m;
-          card.style.transform = `rotateX(${m.x.toFixed(2)}deg) rotateY(${m.y.toFixed(2)}deg)`;
-          // pass mouse to media highlight
-          card.style.setProperty('--mx', mx + 'px');
-          card.style.setProperty('--my', my + 'px');
-          raf = null;
-        }
-
-        card.addEventListener('mousemove', onMove, { passive: true });
-        card.addEventListener('mouseleave', onLeave);
-      }
-
-      cards.forEach(attach);
-    })();
+    // Minimalist: remove 3D card tilt for calmer browsing
   </script>
 </script>
 
